@@ -398,7 +398,7 @@ static void poll_function_work(struct work_struct *input_work)
 	tmpkt = ktime_sub(sdata->oldktime,
 		   ktime_set(0, (ism330dlc_get_time_ns() - sdata->timestamp)));
 
-	if (tmpkt < 0LL)
+	if (ktime_before(tmpkt, ktime_set(0, 0)))
 		tmpkt = ktime_set(0, MS_TO_NS(sdata->poll_interval));
 
 	hrtimer_start(&sdata->hr_timer, tmpkt, HRTIMER_MODE_REL);

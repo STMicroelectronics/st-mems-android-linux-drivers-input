@@ -429,8 +429,8 @@ static void lps22df_prs_input_work_func(struct work_struct *work)
 			  ktime_set(0,
 				(lps22df_prs_get_time_ns() - prs->timestamp)));
 
-	if (tmpkt < 0LL)
-		tmpkt = ktime_set(0, prs->delta_ts);
+	if (ktime_before(tmpkt, ktime_set(0, 0)))
+		tmpkt = prs->delta_ts;
 
 	if (atomic_read(&prs->enabled)) {
 		hrtimer_start(&prs->hr_timer, tmpkt, HRTIMER_MODE_REL);
