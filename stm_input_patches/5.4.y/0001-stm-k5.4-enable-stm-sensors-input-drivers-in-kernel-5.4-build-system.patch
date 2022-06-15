@@ -1,0 +1,35 @@
+From e7f6f1564a7e70276e572292758af02c185136e5 Mon Sep 17 00:00:00 2001
+From: Matteo Dameno <matteo.dameno@st.com>
+Date: Wed, 15 Jun 2022 15:26:25 +0200
+Subject: [PATCH] enable stm sensors input drivers in kernel 5.4 build-system
+
+Signed-off-by: Matteo Dameno <matteo.dameno@st.com>
+---
+ drivers/input/misc/Kconfig  | 2 ++
+ drivers/input/misc/Makefile | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/input/misc/Kconfig b/drivers/input/misc/Kconfig
+index 7d9ae39..71bb396 100644
+--- a/drivers/input/misc/Kconfig
++++ b/drivers/input/misc/Kconfig
+@@ -894,4 +894,6 @@ config INPUT_STPMIC1_ONKEY
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called stpmic1_onkey.
+ 
++source "drivers/input/misc/st/Kconfig"
++
+ endif
+diff --git a/drivers/input/misc/Makefile b/drivers/input/misc/Makefile
+index 8fd187f..1b292dc 100644
+--- a/drivers/input/misc/Makefile
++++ b/drivers/input/misc/Makefile
+@@ -85,4 +85,4 @@ obj-$(CONFIG_INPUT_WM831X_ON)		+= wm831x-on.o
+ obj-$(CONFIG_INPUT_XEN_KBDDEV_FRONTEND)	+= xen-kbdfront.o
+ obj-$(CONFIG_INPUT_YEALINK)		+= yealink.o
+ obj-$(CONFIG_INPUT_IDEAPAD_SLIDEBAR)	+= ideapad_slidebar.o
+-
++obj-$(CONFIG_INPUT_ST)			+= st/
+-- 
+2.7.4
+
