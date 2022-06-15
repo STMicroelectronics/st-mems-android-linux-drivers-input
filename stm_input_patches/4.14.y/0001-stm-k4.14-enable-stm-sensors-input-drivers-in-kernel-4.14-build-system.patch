@@ -1,0 +1,34 @@
+From db79bc2e69e954be6f9fdd7c44d44cb8c00df407 Mon Sep 17 00:00:00 2001
+From: Matteo Dameno <matteo.dameno@st.com>
+Date: Tue, 26 Oct 2021 15:52:44 +0200
+Subject: [PATCH] enable stm sensors input drivers in kernel 4.14 build-system
+
+Signed-off-by: Matteo Dameno <matteo.dameno@st.com>
+---
+ drivers/input/misc/Kconfig  | 2 ++
+ drivers/input/misc/Makefile | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/input/misc/Kconfig b/drivers/input/misc/Kconfig
+index 7ffb614..bf85a6a 100644
+--- a/drivers/input/misc/Kconfig
++++ b/drivers/input/misc/Kconfig
+@@ -831,4 +831,6 @@ config INPUT_HISI_POWERKEY
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called hisi_powerkey.
+
++source "drivers/input/misc/st/Kconfig"
++
+ endif
+diff --git a/drivers/input/misc/Makefile b/drivers/input/misc/Makefile
+index 0b6d025..86448a1 100644
+--- a/drivers/input/misc/Makefile
++++ b/drivers/input/misc/Makefile
+@@ -78,3 +78,4 @@ obj-$(CONFIG_INPUT_WM831X_ON)		+= wm831x-on.o
+ obj-$(CONFIG_INPUT_XEN_KBDDEV_FRONTEND)	+= xen-kbdfront.o
+ obj-$(CONFIG_INPUT_YEALINK)		+= yealink.o
+ obj-$(CONFIG_INPUT_IDEAPAD_SLIDEBAR)	+= ideapad_slidebar.o
++obj-$(CONFIG_INPUT_ST)			+= st/
+--
+2.7.4
+
