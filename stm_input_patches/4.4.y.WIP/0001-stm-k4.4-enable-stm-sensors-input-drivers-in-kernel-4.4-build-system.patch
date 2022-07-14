@@ -1,0 +1,34 @@
+From 871e7579562cf57d731831e2d4745681000c0d8d Mon Sep 17 00:00:00 2001
+From: Matteo Dameno <matteo.dameno@st.com>
+Date: Tue, 31 May 2022 19:09:32 +0200
+Subject: [PATCH] enable stm sensors input drivers in kernel 4.4 build-system
+
+Signed-off-by: Matteo Dameno <matteo.dameno@st.com>
+---
+ drivers/input/misc/Kconfig  | 2 ++
+ drivers/input/misc/Makefile | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/input/misc/Kconfig b/drivers/input/misc/Kconfig
+index d6d16fa..3f13f5a 100644
+--- a/drivers/input/misc/Kconfig
++++ b/drivers/input/misc/Kconfig
+@@ -796,4 +796,6 @@ config INPUT_DRV2667_HAPTICS
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called drv2667-haptics.
+ 
++source "drivers/input/misc/st/Kconfig"
++
+ endif
+diff --git a/drivers/input/misc/Makefile b/drivers/input/misc/Makefile
+index 0357a08..e8658ea 100644
+--- a/drivers/input/misc/Makefile
++++ b/drivers/input/misc/Makefile
+@@ -75,3 +75,4 @@ obj-$(CONFIG_INPUT_WM831X_ON)		+= wm831x-on.o
+ obj-$(CONFIG_INPUT_XEN_KBDDEV_FRONTEND)	+= xen-kbdfront.o
+ obj-$(CONFIG_INPUT_YEALINK)		+= yealink.o
+ obj-$(CONFIG_INPUT_IDEAPAD_SLIDEBAR)	+= ideapad_slidebar.o
++obj-$(CONFIG_INPUT_ST)			+= st/
+--
+2.7.4
+
