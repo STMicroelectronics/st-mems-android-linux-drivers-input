@@ -8,7 +8,7 @@ Index
 
 Introduction
 ==============
-This repository contains Linux kernel (v3.10, v3.4) with STMicroelectronics MEMS sensor support. STM sensor drivers are located under the directory [drivers/input/misc/st](https://github.com/STMicroelectronics/STMems_Linux_Input_drivers/tree/linux-3.10.y-gh/drivers/input/misc/st)  organized by sensor type:
+This repository contains STMicroelectronics MEMS sensors for Linux/Android kernels leveraging on **Input framework**. STM sensor drivers are located under the directory [drivers/input/misc/st](https://github.com/STMicroelectronics/st-mems-android-linux-drivers-input/tree/master/drivers/input/misc/st) organized in folders by sensor type:
 
 ### Inertial Module Unit (IMU):
 
@@ -53,7 +53,7 @@ This repository contains Linux kernel (v3.10, v3.4) with STMicroelectronics MEMS
 > STTS751, STTS22H
 
 
-Data collected by STM sensors are pushed to userland through the Linux kernel Input framework using *EV_MSC* events. User space applications can get sensor events by reading the related input device created in the /dev directory. Please see [Input][1] for more information.
+Data collected by STM sensors are pushed from kernel-space to user-space through the Linux kernel Input framework using *EV_MSC* events. User space applications can get sensor events by reading the related input device created in the /dev directory. Please see [Input][1] for more information.
 
 All STM MEMS sensors support *I2C/SPI* digital interface. Please refer to [I2C][2] and [SPI][3] for detailed documentation.
 
@@ -61,18 +61,90 @@ All STM MEMS sensors support *I2C/SPI* digital interface. Please refer to [I2C][
 Integration details
 =====================
 
+## Source code integration
+From your kernel source code root directory add the git remote (i.e. stmems_input_github) for this repository:
+```bash
+git remote add stmems_input_github \
+               https://github.com/STMicroelectronics/st-mems-android-linux-drivers-input.git
+```
+
+Fetch the just added remote:
+```bash
+git fetch stmems_input_github
+```
+
+There are now two ways you may choose for integrating the drivers code into your kernel target branch:
+* merge (**suggested strategy**)
+* rebase
+
+### merge
+Merge the remote branch stmems_input_github/master with your target kernel source branch (i.e branch linux-4.19.y):
+
+```bash
+git merge --no-fork-point \
+          linux-4.19.y \
+          stmems_input_github/master
+```
+
+### rebase
+Rebase the remote branch stmems_input_github/master on top of your target kernel source branch (i.e branch linux-4.19.y):
+
+```bash
+git rebase -Xno-renames \
+           --no-fork-point \
+           linux-4.19.y \
+           stmems_input_github/master
+```
+
+## Apply patches
+Now that drivers code has been added to the target kernel branch, few patches needs to be added in order to add STM drivers into Kconfig & Makefile systems
+
+Apply the patches available in the just added repository selecting the proper kernel release directory (i.e for branch linux-4.19.y):
+
+```bash
+git am stm_input_patches/4.19.y/*-stm-*.patch
+```
+
+## Configuration
+A folder named ``stm_input_configs`` is provided containing the default configs for the supported drivers. Following are two proposed alternative ways (beside the traditional ones) for enabling configurations.
+``common_defconfig`` is mandatory for enabling STM MEMS Sensors drivers' configuration.
+
+### Modify target defconfig
+Sensors defconfig can be appended to the board defconfig (i.e. if your current configuration file is arch/arm/configs/stm32_defconfig):
+
+```bash
+cat stm_input_configs/common_defconfig >> all_sensors_defconfig
+cat stm_input_configs/accel_defconfig >> all_sensors_defconfig
+cat all_sensors_defconfig >> arch/arm/configs/stm32_defconfig
+```
+
+Alternatively, it can be done at build time without altering the board config file, as follow.
+
+### Merge configuration
+Driver config can be merged into current target pre-configured kernel using a script available in the kernel itself:
+
+```bash
+export ARCH=arm
+export CROSS_COMPILE=arm-linux-gnu-
+cat stm_input_configs/common_defconfig >> ./all_sensors_defconfig
+cat stm_input_configs/imus_defconfig >> ./all_sensors_defconfig
+scripts/kconfig/merge_config.sh -n .config ./all_sensors_defconfig
+```
+
+### Traditional Kernel configuration
+
+Configure kernel with *make menuconfig* (alternatively use *make xconfig* or *make qconfig*).
+
 In order to explain how to integrate STM sensors in a different kernel, please consider the following *LSM6DSM* IMU example
 
-### Source code integration
+>		Device Drivers  --->
+>			Input device support  --->
+>			[*]   Miscellaneous devices  --->
+>				<*>   STM MEMs Device Drivers  --->
+>					<M>   Inertial motion unit  --->
+>						<M>   STMicroelectronics LSM6DSM sensor
+>
 
-> * Copy driver source code into the target directory (e.g. *drivers/input/misc*)
-> * Edit related Kconfig (e.g. *drivers/input/misc/Kconfig*) to include *LSM6DSM* support:
-
->         source "drivers/input/misc/lsm6dsm/Kconfig"
-
-> * Edit related Makefile (e.g. *drivers/input/misc/Makefile*) adding the following line:
-
->         obj-y += lsm6dsm/
 
 ### Device Tree configuration
 
@@ -124,20 +196,6 @@ In order to explain how to integrate STM sensors in a different kernel, please c
 >				interrupts = <26 IRQ_TYPE_EDGE_RISING>;
 >			};
 
-
-### Kernel configuration
-
-Configure kernel with *make menuconfig* (alternatively use *make xconfig* or *make qconfig*)
-
->		Device Drivers  --->
->			Input device support  --->
->			[*]   Miscellaneous devices  --->
->				<*>   STM MEMs Device Drivers  --->
->					<M>   Inertial motion unit  --->
->						<M>   STMicroelectronics LSM6DSM sensor
->
-
-
 More Information
 =================
 [http://st.com](http://st.com)
@@ -153,7 +211,7 @@ More Information
 
 Copyright
 ===========
-Copyright (C) 2016 STMicroelectronics
+Copyright (C) 2022 STMicroelectronics
 
 This software is distributed under the GNU General Public License - see the accompanying COPYING file for more details.
 
