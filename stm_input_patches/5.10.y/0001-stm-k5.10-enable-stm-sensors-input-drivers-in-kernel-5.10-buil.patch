@@ -1,0 +1,39 @@
+From 19e130c087c73a7fd3b0ede66eedc0f26dfe8ae5 Mon Sep 17 00:00:00 2001
+From: Matteo Dameno <matteo.dameno@st.com>
+Date: Wed, 20 Jul 2022 18:25:40 +0200
+Subject: [PATCH] enable stm sensors input drivers in kernel 5.10 build-system
+
+adds Kconfig and Makefile to a enable the tree containing
+STM MEMS Input LDDs in mainline LTS 5.10.
+It introduces CONFIG_INPUT_ST as main initial config for them.
+
+Signed-off-by: Matteo Dameno <matteo.dameno@st.com>
+---
+ drivers/input/misc/Kconfig  | 2 ++
+ drivers/input/misc/Makefile | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/input/misc/Kconfig b/drivers/input/misc/Kconfig
+index 362e8a0..1c38623 100644
+--- a/drivers/input/misc/Kconfig
++++ b/drivers/input/misc/Kconfig
+@@ -869,4 +869,6 @@ config INPUT_STPMIC1_ONKEY
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called stpmic1_onkey.
+ 
++source "drivers/input/misc/st/Kconfig"
++
+ endif
+diff --git a/drivers/input/misc/Makefile b/drivers/input/misc/Makefile
+index a48e5f2..e5c4d8a 100644
+--- a/drivers/input/misc/Makefile
++++ b/drivers/input/misc/Makefile
+@@ -84,4 +84,4 @@ obj-$(CONFIG_INPUT_WM831X_ON)		+= wm831x-on.o
+ obj-$(CONFIG_INPUT_XEN_KBDDEV_FRONTEND)	+= xen-kbdfront.o
+ obj-$(CONFIG_INPUT_YEALINK)		+= yealink.o
+ obj-$(CONFIG_INPUT_IDEAPAD_SLIDEBAR)	+= ideapad_slidebar.o
+-
++obj-$(CONFIG_INPUT_ST)			+= st/
+-- 
+2.7.4
+
