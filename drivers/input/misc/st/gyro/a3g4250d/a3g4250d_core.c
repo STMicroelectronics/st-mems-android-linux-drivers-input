@@ -31,7 +31,6 @@
 *******************************************************************************/
 
 #include <linux/mutex.h>
-#include <linux/input-polldev.h>
 #include <linux/version.h>
 #include <linux/err.h>
 #include <linux/errno.h>
@@ -683,7 +682,7 @@ int a3g4250d_common_probe(struct a3g4250d_data *gyro)
 	u8 whoami;
 
 	pr_info("%s: probe start.\n", A3G4250D_DEV_NAME);
-	
+
 	mutex_init(&gyro->lock);
 	mutex_init(&gyro->tb.buf_lock);
 

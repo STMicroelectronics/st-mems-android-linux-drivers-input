@@ -49,7 +49,7 @@
 *******************************************************************************/
 
 #include <linux/mutex.h>
-#include <linux/input-polldev.h>
+#include <linux/input.h>
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/slab.h>
@@ -197,7 +197,7 @@ static int lsm330dlc_gyr_register_update(struct lsm330dlc_gyr_dev *dev,
 	err = dev->tf->read(dev->dev, reg_address, 1, &data);
 	if (err < 0)
 		return err;
-	
+
 	updated_val = ((mask & new_bit_values) | (~mask & data));
 	err = dev->tf->write(dev->dev, reg_address, 1, &updated_val);
 

@@ -43,7 +43,7 @@
 *******************************************************************************/
 
 #include <linux/mutex.h>
-#include <linux/input-polldev.h>
+#include <linux/input.h>
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -279,7 +279,7 @@ static int lsm303dlhc_mag_get_data(struct lsm303dlhc_mag_status *stat,
 		LSM303DLHC_MAG_DEV_NAME, __func__, mag_data[4], mag_data[5], stat->xy_sensitivity, hw_d[1]);
 	pr_debug("%s %s read z=0x%02x 0x%02x (regH regL), sensitivity: %d, z=%d [mGauss]\n",
 		LSM303DLHC_MAG_DEV_NAME, __func__, mag_data[2], mag_data[3], stat->z_sensitivity, hw_d[2]);
-#endif /* LSM303DLHC_DEBUG */	
+#endif /* LSM303DLHC_DEBUG */
 
 	xyz[0] = ((stat->pdata->negate_x) ?
 				(-hw_d[stat->pdata->axis_map_x])
@@ -462,7 +462,7 @@ static ssize_t attr_get_range(struct device *dev,
 		break;
 	}
 	mutex_unlock(&stat->lock);
-	
+
 	return sprintf(buf, "%d mGauss\n", range);
 }
 
@@ -517,7 +517,7 @@ static ssize_t attr_set_range(struct device *dev,
 	dev_info(stat->dev, "magnetometer range set to 0x%02x:"
 					" %lu mGauss\n", range, val);
 	return size;
-	
+
 }
 
 static ssize_t attr_get_enable(struct device *dev,
@@ -703,7 +703,7 @@ static int lsm303dlhc_mag_input_init(struct lsm303dlhc_mag_status *stat)
 		dev_err(stat->dev, "input device allocate failed\n");
 		goto err0;
 	}
-	
+
 	stat->input_dev->name = LSM303DLHC_MAG_DEV_NAME;
 	stat->input_dev->id.bustype = stat->bus_type;
 	stat->input_dev->dev.parent = stat->dev;
@@ -743,12 +743,12 @@ int lsm303dlhc_mag_probe(struct lsm303dlhc_mag_status *stat)
 	int err = -1;
 
 	mutex_lock(&stat->lock);
-	
+
 	stat->pdata = kmalloc(sizeof(*stat->pdata), GFP_KERNEL);
 	if (stat->pdata == NULL)
 		goto err1;
 
-	if (stat->dev->platform_data == NULL) {	
+	if (stat->dev->platform_data == NULL) {
 		memcpy(stat->pdata, &default_lsm303dlhc_mag_pdata,
 							sizeof(*stat->pdata));
 		dev_info(stat->dev, "using default plaform_data\n");
