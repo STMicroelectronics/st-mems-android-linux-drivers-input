@@ -8,7 +8,17 @@ Index
 
 Introduction
 ==============
-This repository contains STMicroelectronics MEMS sensors for Linux/Android kernels leveraging on **Input framework**. STM sensor drivers are located under the directory [drivers/input/misc/st](https://github.com/STMicroelectronics/st-mems-android-linux-drivers-input/tree/master/drivers/input/misc/st) organized in folders by sensor type:
+This repository contains STMicroelectronics MEMS sensors for Linux/Android kernels leveraging on **Input framework**.
+
+The repository currently contains drivers supporting the following Longterm Support (LTS) Kernel releases defined as for "The Linux Kernel Archives", see [Longterm Kernel releases][1]:
+
+>    * 4.9
+>    * 4.14
+>    * 4.19
+>    * 5.4
+>    * 5.10
+
+STM sensor drivers are located under the directory [drivers/input/misc/st](https://github.com/STMicroelectronics/st-mems-android-linux-drivers-input/tree/master/drivers/input/misc/st) organized in folders by sensor type:
 
 ### Inertial Module Unit (IMU):
 
@@ -53,9 +63,9 @@ This repository contains STMicroelectronics MEMS sensors for Linux/Android kerne
 > STTS751, STTS22H
 
 
-Data collected by STM sensors are pushed from kernel-space to user-space through the Linux kernel Input framework using *EV_MSC* events. User space applications can get sensor events by reading the related input device created in the /dev directory. Please see [Input][1] for more information.
+Data collected by STM sensors are pushed from kernel-space to user-space through the Linux kernel Input framework using *EV_MSC* events. User space applications can get sensor events by reading the related input device created in the /dev directory. Please see [Input][2] for more information.
 
-All STM MEMS sensors support *I2C/SPI* digital interface. Please refer to [I2C][2] and [SPI][3] for detailed documentation.
+All STM MEMS sensors support *I2C/SPI* digital interface. Please refer to [I2C][3] and [SPI][4] for detailed documentation.
 
 
 Integration details
@@ -104,6 +114,19 @@ Apply the patches available in the just added repository selecting the proper ke
 ```bash
 git am stm_input_patches/4.19.y/*-stm-*.patch
 ```
+
+### Notes about Supported and WIP (Work In Progress) LTS kernel versions
+Supported LTS kernel versions have patches for enabling their build system in directory:
+```
+stm_input_patches/<K.[X]X>.y/
+```
+where K stands for VERSION and [X]X for PATCHLEVEL according to kernel Makefile.
+
+On the opposite, directories identified with suffix .WIP:
+```
+stm_input_patches/<K.[X]X>.y.WIP/
+```
+are for LTS kernel version whose support is WIP, hence using the above described procedure for enabling their build system and building them is premature and may result in errors.
 
 ## Configuration
 A folder named ``stm_input_configs`` is provided containing the default configs for the supported drivers. Following are two proposed alternative ways (beside the traditional ones) for enabling configurations.
@@ -156,14 +179,14 @@ In order to explain how to integrate STM sensors in a different kernel, please c
 
 > *- reg*: the I2C address or SPI chip select the device will respond to
 
-> *- interrupt-parent*: phandle to the parent interrupt controller as documented in [interrupts][4]
+> *- interrupt-parent*: phandle to the parent interrupt controller as documented in [interrupts][5]
 
-> *- interrupts*: interrupt mapping for IRQ as documented in [interrupts][4]
+> *- interrupts*: interrupt mapping for IRQ as documented in [interrupts][5]
 
 >
 >**Recommended properties for SPI bus usage:**
 
-> *- spi-max-frequency*: maximum SPI bus frequency as documented in [SPI][3]
+> *- spi-max-frequency*: maximum SPI bus frequency as documented in [SPI][4]
 >
 > **Optional properties:**
 
@@ -215,7 +238,8 @@ Copyright (C) 2022 STMicroelectronics
 
 This software is distributed under the GNU General Public License - see the accompanying COPYING file for more details.
 
-[1]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/input "Input"
-[2]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/i2c "I2C"
-[3]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/spi "SPI"
-[4]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt "interrupts"
+[1]: https://www.kernel.org/category/releases.html "Longterm Kernel releases"
+[2]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/input "Input"
+[3]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/i2c "I2C"
+[4]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/spi "SPI"
+[5]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt "interrupts"
