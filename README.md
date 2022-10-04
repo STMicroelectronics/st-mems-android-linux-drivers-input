@@ -12,6 +12,7 @@ This repository contains STMicroelectronics MEMS sensors for Linux/Android kerne
 
 The repository currently contains drivers supporting the following Longterm Support (LTS) Kernel releases defined as for "The Linux Kernel Archives", see [Longterm Kernel releases][1]:
 
+>    * 4.4
 >    * 4.9
 >    * 4.14
 >    * 4.19
