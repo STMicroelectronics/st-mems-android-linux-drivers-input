@@ -1,3 +1,17 @@
+Important Notice
+================
+
+The current repository contains a collection of Linux kernel device drivers for our MEMS sensors using input API, which has become obsolete.
+The kernel support for sensors has evolved and an improved solution for kernel integration of MEMS sensors is provided by IIO API.
+Due to intrinsic limitations of the input framework, the drivers here contained are therefore limited in terms of performance and only the basic hardware embedded features of the MEMS sensors are supported.
+STMicroelectronics provides full support for our MEMS sensors through a complete suite of Linux Device Drivers (LDD) leveraging on the IIO API/framework made available on GitHub:
+
+https://github.com/STMicroelectronics/st-mems-android-linux-drivers-iio/
+
+__We strongly encourage and recommend that users upgrade to the suite of IIO drivers when integrating our sensors in Linux kernel. These upgrades are especially important for our most recent devices and for targets expected to run Android distributions.__
+
+The current repository supports the simpler and/or old designs for pure Linux. The designs for the latest Android versions are supposed to fail their Android CTS tests for sensors due to tightening requirements impacting high-speed data read and use of buffers/FIFO.
+
 Index
 =======
 	* Introduction
