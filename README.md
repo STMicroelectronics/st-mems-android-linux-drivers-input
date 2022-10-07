@@ -106,13 +106,27 @@ There are now two ways you may choose for integrating the drivers code into your
 Merge the remote branch stmems_input_github/master with your target kernel source branch (i.e branch linux-4.19.y):
 
 ```bash
-git merge --no-fork-point \
+git merge --allow-unrelated-histories \
           linux-4.19.y \
           stmems_input_github/master
 ```
 
 ### rebase
 Rebase the remote branch stmems_input_github/master on top of your target kernel source branch (i.e branch linux-4.19.y):
+
+```bash
+git rebase --no-fork-point \
+           linux-4.19.y \
+           stmems_input_github/master
+```
+
+Note: older git versions (i.e.: 2.7.4) would require to use sligthly different options:
+
+```bash
+git merge --no-fork-point \
+          linux-4.19.y \
+          stmems_input_github/master
+```
 
 ```bash
 git rebase -Xno-renames \
