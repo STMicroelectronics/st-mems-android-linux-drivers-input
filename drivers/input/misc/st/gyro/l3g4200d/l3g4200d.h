@@ -1,4 +1,4 @@
-/******************** (C) COPYRIGHT 2010 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2022 STMicroelectronics ********************
 *
 * File Name		: l3g4200d.h
 * Authors		: MH - C&I BU - Application Team
@@ -107,16 +107,27 @@ struct l3g4200d_data {
 	struct l3g4200d_platform_data *pdata;
 	struct mutex lock;
 	u16 bustype;
-	struct input_polled_dev *input_poll_dev;
 	int hw_initialized;
 	int selftest_enabled;
 	atomic_t enabled;
+
+	s64 timestamp;
+	struct hrtimer hr_timer;
+	ktime_t poll_ktime;
+	struct workqueue_struct *work_queue;
+	struct work_struct poll_work;
+	struct input_dev *input_dev;
 
 	u8 reg_addr;
 	u8 resume_state[RESUME_ENTRIES];
 	struct l3g4200d_transfer_function *tf;
 	struct l3g4200d_transfer_buffer tb;
 };
+
+static inline s64 l3g4200d_get_time_ns(void)
+{
+	return ktime_to_ns(ktime_get_boottime());
+}
 
 /* Input events used by l3g4200d driver */
 #define INPUT_EVENT_TYPE		EV_MSC

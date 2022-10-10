@@ -93,7 +93,7 @@ static int l3g4200d_i2c_probe(struct i2c_client *client,
 	int err;
 	struct l3g4200d_data *cdata;
 
-	cdata = kmalloc(sizeof(struct l3g4200d_data), GFP_KERNEL);
+	cdata = kzalloc(sizeof(struct l3g4200d_data), GFP_KERNEL);
 	if (!cdata)
 		return -ENOMEM;
 

@@ -1,12 +1,12 @@
-/******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2016-2022 STMicroelectronics ***************
 *
 * File Name	: l3g4200d_spi.c
 * Authors	: AMS - Motion Mems Division - Application Team - Application Team
-*		     : Giuseppe Barba <giuseppe.barba@st.com>
-*		     : Mario Tesi <mario.tesi@st.com>
-*		     : Author is willing to be considered the contact and update
-* Version	: V.1.0.14
-* Date		: 2016/Apr/26
+*		: Giuseppe Barba <giuseppe.barba@st.com>
+*		: Mario Tesi <mario.tesi@st.com>
+*		:
+* Version	: V.1.0.15
+* Date		: 2022/Aug/26
 *
 ********************************************************************************
 *
@@ -115,7 +115,7 @@ static int l3g4200d_spi_probe(struct spi_device *spi)
 	int err;
 	struct l3g4200d_data *cdata;
 
-	cdata = kmalloc(sizeof(struct l3g4200d_data), GFP_KERNEL);
+	cdata = kzalloc(sizeof(struct l3g4200d_data), GFP_KERNEL);
 	if (!cdata)
 		return -ENOMEM;
 

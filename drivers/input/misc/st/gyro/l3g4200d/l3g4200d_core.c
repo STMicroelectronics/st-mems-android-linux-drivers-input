@@ -39,7 +39,6 @@
 *******************************************************************************/
 
 #include <linux/mutex.h>
-#include <linux/input-polldev.h>
 #include <linux/version.h>
 #include <linux/err.h>
 #include <linux/errno.h>
@@ -67,7 +66,6 @@
 /* l3g4200d gyroscope registers */
 #define WHO_AM_I        0x0F
 #define WHOAMI_L3G4200D	0xD3	/* Expected content for WAI register*/
-
 
 #define CTRL_REG1       0x20    /* CTRL REG1 */
 #define CTRL_REG2       0x21    /* CTRL REG2 */
@@ -111,6 +109,7 @@
 #define	RES_CTRL_REG4	3
 #define	RES_CTRL_REG5	4
 
+#define MS_TO_NS(x)	((x)*1000000L)
 //#define DEBUG 1
 
 /*
@@ -118,12 +117,11 @@
  * brief structure containing gyroscope values for yaw, pitch and roll in
  * signed short
  */
-
 static const struct output_rate odr_table[] = {
-	{	2,	ODR800|BW10},
-	{	3,	ODR400|BW01},
-	{	5,	ODR200|BW00},
-	{	10,	ODR100|BW00},
+	{ 2, ODR800|BW10 },
+	{ 3, ODR400|BW01 },
+	{ 5, ODR200|BW00 },
+	{ 10, ODR100|BW00 },
 };
 
 static int l3g4200d_register_write(struct l3g4200d_data *gyro, u8 *buf,
@@ -191,7 +189,7 @@ static int l3g4200d_update_fs_range(struct l3g4200d_data *gyro,
 static int l3g4200d_selftest(struct l3g4200d_data *gyro, u8 enable)
 {
 	int err = -1;
-	u8 buf[2] = {0x00,0x00};
+	u8 buf[2] = { 0x00, 0x00 };
 	char reg_address, mask, bit_values;
 
 	reg_address = CTRL_REG4;
@@ -238,6 +236,7 @@ static int l3g4200d_update_odr(struct l3g4200d_data *gyro,
 			return err;
 		gyro->resume_state[RES_CTRL_REG1] = config;
 	}
+	gyro->poll_ktime = ktime_set(0, MS_TO_NS(poll_interval));
 
 	return err;
 }
@@ -269,15 +268,17 @@ static int l3g4200d_get_data(struct l3g4200d_data *gyro,
 	return err;
 }
 
-static void l3g4200d_report_values(struct l3g4200d_data *l3g,
+static void l3g4200d_report_values(struct l3g4200d_data *gyro,
 				   struct l3g4200d_triple *data)
 {
-	struct input_dev *input = l3g->input_poll_dev->input;
-
-	input_event(input, INPUT_EVENT_TYPE, INPUT_EVENT_X, data->x);
-	input_event(input, INPUT_EVENT_TYPE, INPUT_EVENT_Y, data->y);
-	input_event(input, INPUT_EVENT_TYPE, INPUT_EVENT_Z, data->z);
-	input_sync(input);
+	input_event(gyro->input_dev, INPUT_EVENT_TYPE, INPUT_EVENT_X, data->x);
+	input_event(gyro->input_dev, INPUT_EVENT_TYPE, INPUT_EVENT_Y, data->y);
+	input_event(gyro->input_dev, INPUT_EVENT_TYPE, INPUT_EVENT_Z, data->z);
+	input_event(gyro->input_dev, INPUT_EVENT_TYPE, INPUT_EVENT_TIME_MSB,
+		    gyro->timestamp >> 32);
+	input_event(gyro->input_dev, INPUT_EVENT_TYPE, INPUT_EVENT_TIME_LSB,
+		    gyro->timestamp & 0xffffffff);
+	input_sync(gyro->input_dev);
 }
 
 static int l3g4200d_hw_init(struct l3g4200d_data *gyro)
@@ -344,25 +345,43 @@ static int l3g4200d_device_power_on(struct l3g4200d_data *dev_data)
 	return 0;
 }
 
-static int l3g4200d_enable(struct l3g4200d_data *dev_data)
+static int _l3g4200d_enable(struct l3g4200d_data *dev_data)
 {
 	int err;
 
-	if (!atomic_cmpxchg(&dev_data->enabled, 0, 1)) {
-		err = l3g4200d_device_power_on(dev_data);
-		if (err < 0) {
-			atomic_set(&dev_data->enabled, 0);
-			return err;
-		}
+	err = l3g4200d_device_power_on(dev_data);
+	if (err < 0) {
+		atomic_set(&dev_data->enabled, 0);
+		return err;
 	}
+	hrtimer_start(&dev_data->hr_timer, dev_data->poll_ktime, HRTIMER_MODE_REL);
 
 	return 0;
+}
+
+static int l3g4200d_enable(struct l3g4200d_data *dev_data)
+{
+	int err = 0;
+
+	if (!atomic_cmpxchg(&dev_data->enabled, 0, 1)) {
+		err = _l3g4200d_enable(dev_data);
+	}
+
+	return err;
+}
+
+static void _l3g4200d_disable(struct l3g4200d_data *dev_data)
+{
+	l3g4200d_device_power_off(dev_data);
+
+	cancel_work_sync(&dev_data->poll_work);
+	hrtimer_cancel(&dev_data->hr_timer);
 }
 
 static int l3g4200d_disable(struct l3g4200d_data *dev_data)
 {
 	if (atomic_cmpxchg(&dev_data->enabled, 1, 0))
-		l3g4200d_device_power_off(dev_data);
+		_l3g4200d_disable(dev_data);
 
 	return 0;
 }
@@ -375,7 +394,7 @@ static ssize_t attr_polling_rate_show(struct device *dev,
 	struct l3g4200d_data *gyro = dev_get_drvdata(dev);
 
 	mutex_lock(&gyro->lock);
-	val = gyro->input_poll_dev->poll_interval;
+	val = gyro->pdata->poll_interval;
 	mutex_unlock(&gyro->lock);
 
 	return sprintf(buf, "%d\n", val);
@@ -396,7 +415,6 @@ static ssize_t attr_polling_rate_store(struct device *dev,
 
 	interval_ms = max((unsigned int)interval_ms,gyro->pdata->min_interval);
 	mutex_lock(&gyro->lock);
-	gyro->input_poll_dev->poll_interval = interval_ms;
 	gyro->pdata->poll_interval = interval_ms;
 	l3g4200d_update_odr(gyro, interval_ms);
 	mutex_unlock(&gyro->lock);
@@ -595,17 +613,36 @@ static int remove_sysfs_interfaces(struct device *dev)
 	return 0;
 }
 
-static void l3g4200d_input_poll_func(struct input_polled_dev *dev)
+static void l3g4200d_poll_work_func(struct work_struct *work)
 {
-	struct l3g4200d_data *gyro = dev->private;
+	struct l3g4200d_data *gyro;
 	struct l3g4200d_triple data_out;
 	int err;
+
+	gyro = container_of((struct work_struct *) work, struct l3g4200d_data,
+			    poll_work);
 
 	err = l3g4200d_get_data(gyro, &data_out);
 	if (err < 0)
 		dev_err(gyro->dev, "get_gyroscope_data failed\n");
 	else
 		l3g4200d_report_values(gyro, &data_out);
+
+	hrtimer_start(&gyro->hr_timer, gyro->poll_ktime, HRTIMER_MODE_REL);
+}
+
+static enum hrtimer_restart l3g4200d_timer_poll(struct hrtimer *timer)
+{
+	struct l3g4200d_data *gyro;
+
+	gyro = container_of((struct hrtimer *)timer, struct l3g4200d_data,
+			    hr_timer);
+
+	gyro->timestamp = l3g4200d_get_time_ns();
+
+	queue_work(gyro->work_queue, &gyro->poll_work);
+
+	return HRTIMER_NORESTART;
 }
 
 int l3g4200d_input_open(struct input_dev *input)
@@ -668,53 +705,60 @@ static int l3g4200d_validate_pdata(struct l3g4200d_data *gyro)
 static int l3g4200d_input_init(struct l3g4200d_data *gyro)
 {
 	int err = -1;
-	struct input_dev *input;
 
-
-	gyro->input_poll_dev = input_allocate_polled_device();
-	if (!gyro->input_poll_dev) {
+	gyro->input_dev = input_allocate_device();
+	if (!gyro->input_dev) {
 		err = -ENOMEM;
-		dev_err(gyro->dev, "input device allocate failed\n");
-		goto err0;
+		dev_err(gyro->dev, "input device allocation failed\n");
+		return err;
 	}
 
-	gyro->input_poll_dev->private = gyro;
-	gyro->input_poll_dev->poll = l3g4200d_input_poll_func;
-	gyro->input_poll_dev->poll_interval = gyro->pdata->poll_interval;
+	gyro->input_dev->name = L3G4200D_DEV_NAME;
+	gyro->input_dev->open = l3g4200d_input_open;
+	gyro->input_dev->close = l3g4200d_input_close;
+	gyro->input_dev->id.bustype = gyro->bustype;
+	gyro->input_dev->dev.parent = gyro->dev;
+	input_set_drvdata(gyro->input_dev, gyro);
 
-	input = gyro->input_poll_dev->input;
-	input->name = L3G4200D_DEV_NAME;
-	input->open = l3g4200d_input_open;
-	input->close = l3g4200d_input_close;
-	input->id.bustype = gyro->bustype;
-	input->dev.parent = gyro->dev;
-	input_set_drvdata(gyro->input_poll_dev->input, gyro);
+	/* Set Misc event type */
+	__set_bit(INPUT_EVENT_TYPE, gyro->input_dev->evbit);
+	__set_bit(INPUT_EVENT_X, gyro->input_dev->mscbit);
+	__set_bit(INPUT_EVENT_Y, gyro->input_dev->mscbit);
+	__set_bit(INPUT_EVENT_Z, gyro->input_dev->mscbit);
+	__set_bit(INPUT_EVENT_TIME_MSB, gyro->input_dev->mscbit);
+	__set_bit(INPUT_EVENT_TIME_LSB, gyro->input_dev->mscbit);
 
-	__set_bit(INPUT_EVENT_TYPE, input->evbit );
-	__set_bit(INPUT_EVENT_X, input->mscbit);
-	__set_bit(INPUT_EVENT_Y, input->mscbit);
-	__set_bit(INPUT_EVENT_Z, input->mscbit);
-
-	err = input_register_polled_device(gyro->input_poll_dev);
+	err = input_register_device(gyro->input_dev);
 	if (err) {
 		dev_err(gyro->dev,
-			"unable to register input polled device %s\n",
-			gyro->input_poll_dev->input->name);
-		goto err1;
+			"unable to register input device %s\n",
+			gyro->input_dev->name);
+		input_free_device(gyro->input_dev);
+
+		return err;
 	}
 
-	return 0;
+	gyro->work_queue = create_workqueue("l3g4200d_wq");
+	if (!gyro->work_queue)
+		return -ENOMEM;
 
-err1:
-	input_free_polled_device(gyro->input_poll_dev);
-err0:
-	return err;
+	hrtimer_init(&gyro->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	gyro->hr_timer.function = &l3g4200d_timer_poll;
+
+	INIT_WORK(&gyro->poll_work, l3g4200d_poll_work_func);
+
+	return 0;
 }
 
 static void l3g4200d_input_cleanup(struct l3g4200d_data *gyro)
 {
-	input_unregister_polled_device(gyro->input_poll_dev);
-	input_free_polled_device(gyro->input_poll_dev);
+	if (gyro->work_queue) {
+		flush_workqueue(gyro->work_queue);
+		destroy_workqueue(gyro->work_queue);
+		gyro->work_queue = NULL;
+	}
+	input_unregister_device(gyro->input_dev);
+	input_free_device(gyro->input_dev);
 }
 
 #ifdef CONFIG_OF
@@ -739,7 +783,7 @@ int l3g4200d_common_probe(struct l3g4200d_data *gyro)
 	u8 whoami;
 
 	pr_info("%s: probe start.\n", L3G4200D_DEV_NAME);
-	
+
 	mutex_init(&gyro->lock);
 	mutex_init(&gyro->tb.buf_lock);
 
@@ -858,6 +902,7 @@ err1:
 	kfree(gyro->pdata);
 err0:
 	pr_err("%s: Driver Initialization failed\n", L3G4200D_DEV_NAME);
+
 	return err;
 }
 EXPORT_SYMBOL(l3g4200d_common_probe);
@@ -879,6 +924,9 @@ EXPORT_SYMBOL(l3g4200d_common_remove);
 #ifdef CONFIG_PM_SLEEP
 int l3g4200d_common_suspend(struct l3g4200d_data *gyro)
 {
+	if (atomic_read(&gyro->enabled))
+		_l3g4200d_disable(gyro);
+
 #ifdef DEBUG
 	pr_info(KERN_INFO "l3g4200d_suspend\n");
 #endif /* DEBUG */
@@ -888,6 +936,9 @@ EXPORT_SYMBOL(l3g4200d_common_suspend);
 
 int l3g4200d_common_resume(struct l3g4200d_data *gyro)
 {
+	if (atomic_read(&gyro->enabled))
+		_l3g4200d_enable(gyro);
+
 #ifdef DEBUG
 	pr_info(KERN_INFO "l3g4200d_resume\n");
 #endif /*DEBUG */
@@ -896,6 +947,6 @@ int l3g4200d_common_resume(struct l3g4200d_data *gyro)
 EXPORT_SYMBOL(l3g4200d_common_resume);
 #endif /* CONFIG_PM_SLEEP */
 
-MODULE_DESCRIPTION("l3g4200d digital gyroscope sysfs driver");
+MODULE_DESCRIPTION("l3g4200d digital gyro driver");
 MODULE_AUTHOR("Matteo Dameno, Carmine Iascone, Mario Tesi, STMicroelectronics");
 MODULE_LICENSE("GPL v2");
