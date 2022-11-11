@@ -453,14 +453,33 @@ static ssize_t attr_range_store(struct device *dev,
 {
 	struct l3g4200d_data *gyro = dev_get_drvdata(dev);
 	unsigned long val;
+	int err;
+	u8 new_fs = 0;
 
 	if (kstrtoul(buf, 10, &val))
 		return -EINVAL;
 
+	switch (val) {
+	case L3G4200D_GYR_FS_250DPS:
+	case L3G4200D_GYR_FS_500DPS:
+	case L3G4200D_GYR_FS_2000DPS:
+		new_fs = val;
+		break;
+	default:
+		dev_err(gyro->dev, "invalid range request: %lu,"
+			" discarded\n", val);
+		return -EINVAL;
+	}
+
 	mutex_lock(&gyro->lock);
-	gyro->pdata->fs_range = val;
-	l3g4200d_update_fs_range(gyro, val);
+	err = l3g4200d_update_fs_range(gyro, new_fs);
+	if (err < 0) {
+		mutex_unlock(&gyro->lock);
+		return err;
+	}
+	gyro->pdata->fs_range = new_fs;
 	mutex_unlock(&gyro->lock);
+	dev_info(gyro->dev, "range set to: %lu dps\n", val);
 
 	return size;
 }
