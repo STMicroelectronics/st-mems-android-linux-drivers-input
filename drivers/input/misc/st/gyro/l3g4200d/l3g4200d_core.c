@@ -460,11 +460,23 @@ static ssize_t attr_range_store(struct device *dev,
 		return -EINVAL;
 
 	switch (val) {
+#ifdef L3G4200D_LEGACY
 	case L3G4200D_GYR_FS_250DPS:
 	case L3G4200D_GYR_FS_500DPS:
 	case L3G4200D_GYR_FS_2000DPS:
 		new_fs = val;
 		break;
+#else
+	case 250:
+		new_fs = L3G4200D_GYR_FS_250DPS;
+		break;
+	case 500:
+		new_fs = L3G4200D_GYR_FS_500DPS;
+		break;
+	case 2000:
+		new_fs = L3G4200D_GYR_FS_2000DPS;
+		break;
+#endif
 	default:
 		dev_err(gyro->dev, "invalid range request: %lu,"
 			" discarded\n", val);
@@ -595,7 +607,11 @@ static ssize_t attr_addr_set(struct device *dev, struct device_attribute *attr,
 static struct device_attribute attributes[] = {
 	__ATTR(pollrate_ms, 0664, attr_polling_rate_show,
 	       attr_polling_rate_store),
+#ifdef L3G4200D_LEGACY
 	__ATTR(range, 0664, attr_range_show, attr_range_store),
+#else
+	__ATTR(range_dps, 0664, attr_range_show, attr_range_store),
+#endif
 	__ATTR(enable_device, 0664, attr_enable_show, attr_enable_store),
 	__ATTR(enable_selftest, 0664, attr_get_selftest, attr_set_selftest),
 #ifdef DEBUG
