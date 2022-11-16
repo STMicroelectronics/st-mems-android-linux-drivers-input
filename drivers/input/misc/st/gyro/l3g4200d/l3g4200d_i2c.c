@@ -34,12 +34,12 @@
 
 #include "l3g4200d.h"
 
-#define	I2C_AUTO_INCREMENT	0x80
+#define	I2C_AUTO_INCREMENT		0x80
+#define	L3G4200D_GYR_I2C_READ_BUFFSIZE	5
 
 static int l3g4200d_i2c_read(struct l3g4200d_data *cdata, u8 reg_addr,
 			       int len, u8 *data)
 {
-	int err = 0;
 	struct i2c_msg msg[2];
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
@@ -54,18 +54,18 @@ static int l3g4200d_i2c_read(struct l3g4200d_data *cdata, u8 reg_addr,
 	msg[1].len = len;
 	msg[1].buf = data;
 
-	err = i2c_transfer(client->adapter, msg, 2);
-
-	return err;
+	return i2c_transfer(client->adapter, msg, 2);
 }
 
 static int l3g4200d_i2c_write(struct l3g4200d_data *cdata, u8 reg_addr,
 				int len, u8 *data)
 {
-	int err = 0;
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(cdata->dev);
+	u8 send[1+L3G4200D_GYR_I2C_READ_BUFFSIZE];
+
+	if (len >= ARRAY_SIZE(send))
+		return -ENOMEM;
 
 	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
 	send[0] = reg_addr;
@@ -77,9 +77,7 @@ static int l3g4200d_i2c_write(struct l3g4200d_data *cdata, u8 reg_addr,
 	msg.len = len;
 	msg.buf = send;
 
-	err = i2c_transfer(client->adapter, &msg, 1);
-
-	return err;
+	return i2c_transfer(client->adapter, &msg, 1);
 }
 
 static struct l3g4200d_transfer_function l3g4200d_tf_i2c = {
