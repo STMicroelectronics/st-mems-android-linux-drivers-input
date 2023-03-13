@@ -124,7 +124,20 @@ static int lis3mdl_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-int lis3mdl_i2c_remove(struct i2c_client *client)
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lis3mdl_i2c_remove(struct i2c_client *client)
+{
+	struct lis3mdl_dev *dev = i2c_get_clientdata(client);
+
+#ifdef LIS3MDL_DEBUG
+	dev_info(&client->dev, "driver removing\n");
+#endif
+
+	lis3mdl_mag_remove(dev);
+	kfree(dev);
+}
+#else
+static int lis3mdl_i2c_remove(struct i2c_client *client)
 {
 	struct lis3mdl_dev *dev = i2c_get_clientdata(client);
 
@@ -137,6 +150,7 @@ int lis3mdl_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id lis3mdl_i2c_id[] = {
 	{ "lis3mdl", 0 },

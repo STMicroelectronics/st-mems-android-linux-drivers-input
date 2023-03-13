@@ -482,6 +482,21 @@ input_cleanup:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void stts22h_remove(struct i2c_client *client)
+{
+	struct stts22h_sensor *sensor = i2c_get_clientdata(client);
+
+	cancel_delayed_work_sync(&sensor->input_work);
+	stts22h_device_power_off(sensor);
+	stts22h_input_cleanup(sensor);
+	stts22h_sysfs_remove(sensor->dev);
+
+	dev_info(sensor->dev,
+		 "removed device %s\n",
+		 sensor->input_dev->name);
+}
+#else
 static int stts22h_remove(struct i2c_client *client)
 {
 	struct stts22h_sensor *sensor = i2c_get_clientdata(client);
@@ -497,6 +512,7 @@ static int stts22h_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id stts22h_id[] = {
 	{ STTS22H_DEVICE_NAME, 0 },

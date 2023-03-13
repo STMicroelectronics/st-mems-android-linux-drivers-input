@@ -136,7 +136,20 @@ static int l3gd20h_gyr_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-int l3gd20h_gyr_i2c_remove(struct i2c_client *client)
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void l3gd20h_gyr_i2c_remove(struct i2c_client *client)
+{
+	struct l3gd20h_gyr_status *stat = i2c_get_clientdata(client);
+
+#ifdef L3GD20H_DEBUG
+	dev_info(stat->dev, "driver removing\n");
+#endif
+
+	l3gd20h_gyr_remove(stat);
+	kfree(stat);
+}
+#else
+static int l3gd20h_gyr_i2c_remove(struct i2c_client *client)
 {
 	struct l3gd20h_gyr_status *stat = i2c_get_clientdata(client);
 
@@ -149,6 +162,7 @@ int l3gd20h_gyr_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id l3gd20h_gyr_i2c_id[] = {
 	{ "l3gd20h_gyr", 0 },

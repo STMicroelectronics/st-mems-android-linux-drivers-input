@@ -14,6 +14,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/i2c.h>
+#include <linux/version.h>
 
 #include <linux/input.h>
 
@@ -105,6 +106,16 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lps22df_i2c_remove(struct i2c_client *client)
+{
+	struct lps22df_prs_data *cdata = i2c_get_clientdata(client);
+
+	lps22df_common_remove(cdata);
+	pr_info("%s: removed\n", LPS22DF_PRS_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lps22df_i2c_remove(struct i2c_client *client)
 {
 	struct lps22df_prs_data *cdata = i2c_get_clientdata(client);
@@ -115,6 +126,7 @@ static int lps22df_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lps22df_suspend(struct device *dev)

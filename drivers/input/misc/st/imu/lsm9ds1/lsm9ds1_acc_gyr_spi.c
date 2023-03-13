@@ -11,6 +11,7 @@
 #include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "lsm9ds1.h"
 
@@ -156,7 +157,20 @@ static int lsm9ds1_acc_gyr_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int lsm9ds1_acc_gyr_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm9ds1_acc_gyr_spi_remove(struct spi_device *spi)
+{
+	struct lsm9ds1_acc_gyr_dev *dev = spi_get_drvdata(spi);
+
+#ifdef LSM9DS1_DEBUG
+	dev_info(dev->dev, "driver removing\n");
+#endif
+
+	lsm9ds1_acc_gyr_remove(dev);
+	kfree(dev);
+}
+#else
+static int lsm9ds1_acc_gyr_spi_remove(struct spi_device *spi)
 {
 	struct lsm9ds1_acc_gyr_dev *dev = spi_get_drvdata(spi);
 
@@ -169,6 +183,7 @@ int lsm9ds1_acc_gyr_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lsm9ds1_acc_gyr_spi_id[] = {
 	{ "lsm9ds1_acc_gyr", 0 },

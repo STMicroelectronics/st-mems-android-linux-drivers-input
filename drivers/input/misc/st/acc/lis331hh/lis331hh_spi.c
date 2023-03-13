@@ -131,6 +131,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lis331hh_spi_remove(struct spi_device *spi)
+{
+	struct lis331hh_data *stat = spi_get_drvdata(spi);
+
+	lis331hh_common_remove(stat);
+	kfree(stat);
+}
+#else
 static int lis331hh_spi_remove(struct spi_device *spi)
 {
 	struct lis331hh_data *stat = spi_get_drvdata(spi);
@@ -140,6 +149,7 @@ static int lis331hh_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lis331hh_suspend(struct device *dev)

@@ -17,6 +17,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -122,6 +123,17 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lps22hh_spi_remove(struct spi_device *spi)
+{
+	/* TODO: check the function */
+	struct lps22hh_data *cdata = spi_get_drvdata(spi);
+
+	lps22hh_common_remove(cdata);
+	dev_info(cdata->dev, "%s: removed\n", LPS22HH_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lps22hh_spi_remove(struct spi_device *spi)
 {
 	/* TODO: check the function */
@@ -133,6 +145,7 @@ static int lps22hh_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lps22hh_suspend(struct device *dev)

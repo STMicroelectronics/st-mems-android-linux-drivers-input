@@ -519,6 +519,20 @@ unlock:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void stts751_remove(struct i2c_client *client)
+{
+	struct stts751_dev *dev = i2c_get_clientdata(client);
+
+	dev_info(dev->dev, "removing device %s\n", dev->input_dev->name);
+
+	cancel_delayed_work_sync(&dev->input_work);
+	stts751_device_power_off(dev);
+	stts751_input_cleanup(dev);
+	stts751_sysfs_remove(dev->dev);
+	kfree(dev);
+}
+#else
 static int stts751_remove(struct i2c_client *client)
 {
 	struct stts751_dev *dev = i2c_get_clientdata(client);
@@ -533,6 +547,7 @@ static int stts751_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id stts751_id[] = {
 	{ "stts751", 0 },

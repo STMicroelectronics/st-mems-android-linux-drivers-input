@@ -120,6 +120,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lis3de_spi_remove(struct spi_device *spi)
+{
+	struct lis3de_status *stat = spi_get_drvdata(spi);
+
+	lis3de_common_remove(stat);
+	kfree(stat);
+}
+#else
 static int lis3de_spi_remove(struct spi_device *spi)
 {
 	struct lis3de_status *stat = spi_get_drvdata(spi);
@@ -129,6 +138,7 @@ static int lis3de_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lis3de_suspend(struct device *dev)

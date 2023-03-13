@@ -137,6 +137,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void uvis25_i2c_remove(struct i2c_client *client)
+{
+	struct uvis25_data *stat = i2c_get_clientdata(client);
+
+	uvis25_common_remove(stat);
+	kfree(stat);
+}
+#else
 static int uvis25_i2c_remove(struct i2c_client *client)
 {
 	struct uvis25_data *stat = i2c_get_clientdata(client);
@@ -146,6 +155,7 @@ static int uvis25_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int uvis25_suspend(struct device *dev)

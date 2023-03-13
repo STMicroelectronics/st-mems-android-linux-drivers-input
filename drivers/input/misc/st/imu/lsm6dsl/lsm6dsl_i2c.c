@@ -15,6 +15,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "lsm6dsl_core.h"
 
@@ -104,6 +105,16 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lsm6dsl_i2c_remove(struct i2c_client *client)
+{
+	struct lsm6dsl_data *cdata = i2c_get_clientdata(client);
+
+	lsm6dsl_common_remove(cdata, client->irq);
+	dev_info(cdata->dev, "%s: removed\n", LSM6DSL_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lsm6dsl_i2c_remove(struct i2c_client *client)
 {
 	struct lsm6dsl_data *cdata = i2c_get_clientdata(client);
@@ -114,6 +125,7 @@ static int lsm6dsl_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lsm6dsl_suspend(struct device *dev)

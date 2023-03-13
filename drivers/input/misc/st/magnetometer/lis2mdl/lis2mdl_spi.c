@@ -175,7 +175,20 @@ static int lis2mdl_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int lis2mdl_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lis2mdl_spi_remove(struct spi_device *spi)
+{
+	struct st_common_data *cdata = spi_get_drvdata(spi);
+
+#ifdef LIS2MDL_DEBUG
+	dev_info(cdata->dev, "driver removing\n");
+#endif
+
+	lis2mdl_remove(cdata);
+	kfree(cdata);
+}
+#else
+static int lis2mdl_spi_remove(struct spi_device *spi)
 {
 	struct st_common_data *cdata = spi_get_drvdata(spi);
 
@@ -188,6 +201,7 @@ int lis2mdl_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lis2mdl_spi_id[] = {
 	{ LIS2MDL_DEV_NAME, 0 },

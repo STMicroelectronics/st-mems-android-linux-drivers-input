@@ -137,6 +137,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lps25h_i2c_remove(struct i2c_client *client)
+{
+	struct lps25h_prs_data *stat = i2c_get_clientdata(client);
+
+	lps25h_common_remove(stat);
+	kfree(stat);
+}
+#else
 static int lps25h_i2c_remove(struct i2c_client *client)
 {
 	struct lps25h_prs_data *stat = i2c_get_clientdata(client);
@@ -146,6 +155,7 @@ static int lps25h_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lps25h_suspend(struct device *dev)

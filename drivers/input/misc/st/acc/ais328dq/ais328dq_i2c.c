@@ -124,6 +124,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void ais328dq_i2c_remove(struct i2c_client *client)
+{
+	struct ais328dq_acc_data *acc = i2c_get_clientdata(client);
+
+	ais328dq_acc_remove(acc);
+	kfree(acc);
+}
+#else
 static int ais328dq_i2c_remove(struct i2c_client *client)
 {
 	struct ais328dq_acc_data *acc = i2c_get_clientdata(client);
@@ -133,6 +142,7 @@ static int ais328dq_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int ais328dq_suspend(struct device *dev)

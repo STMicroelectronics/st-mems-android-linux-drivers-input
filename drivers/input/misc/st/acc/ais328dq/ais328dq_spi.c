@@ -11,6 +11,7 @@
 #include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "ais328dq.h"
 
@@ -150,7 +151,20 @@ static int ais328dq_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int ais328dq_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void ais328dq_spi_remove(struct spi_device *spi)
+{
+	struct ais328dq_acc_data *acc = spi_get_drvdata(spi);
+
+#ifdef AIS328DQ_DEBUG
+	dev_info(acc->dev, "driver removing\n");
+#endif
+
+	ais328dq_acc_remove(acc);
+	kfree(acc);
+}
+#else
+static int ais328dq_spi_remove(struct spi_device *spi)
 {
 	struct ais328dq_acc_data *acc = spi_get_drvdata(spi);
 
@@ -163,6 +177,7 @@ int ais328dq_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id ais328dq_spi_id[] = {
 	{ "ais328dq", 0 },

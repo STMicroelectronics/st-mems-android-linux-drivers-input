@@ -14,6 +14,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "lsm6dsox_core.h"
 
@@ -131,6 +132,16 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm6dsox_spi_remove(struct spi_device *spi)
+{
+	struct lsm6dsox_data *cdata = spi_get_drvdata(spi);
+
+	lsm6dsox_common_remove(cdata, spi->irq);
+	dev_info(cdata->dev, "%s: removed\n", LSM6DSOX_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lsm6dsox_spi_remove(struct spi_device *spi)
 {
 	struct lsm6dsox_data *cdata = spi_get_drvdata(spi);
@@ -141,6 +152,7 @@ static int lsm6dsox_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lsm6dsox_suspend(struct device *dev)

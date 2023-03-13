@@ -154,6 +154,15 @@ static int lsm303agr_acc_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm303agr_acc_spi_remove(struct spi_device *spi)
+{
+	struct lsm303agr_common_data *cdata = spi_get_drvdata(spi);
+
+	lsm303agr_acc_remove(cdata);
+	kfree(cdata);
+}
+#else
 static int lsm303agr_acc_spi_remove(struct spi_device *spi)
 {
 	struct lsm303agr_common_data *cdata = spi_get_drvdata(spi);
@@ -163,6 +172,7 @@ static int lsm303agr_acc_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lsm303agr_acc_spi_ids[] = {
 	{ "lsm303agr_acc", 0 },

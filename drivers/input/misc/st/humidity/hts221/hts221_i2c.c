@@ -10,6 +10,7 @@
 #include <linux/i2c.h>
 #include <linux/slab.h>
 #include <linux/input.h>
+#include <linux/version.h>
 
 #include "hts221_core.h"
 
@@ -124,7 +125,20 @@ static int hts221_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-int hts221_i2c_remove(struct i2c_client *client)
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void hts221_i2c_remove(struct i2c_client *client)
+{
+	struct hts221_dev *dev = i2c_get_clientdata(client);
+
+#ifdef HTS221_DEBUG
+	dev_info(&client->dev, "driver removing\n");
+#endif
+
+	hts221_remove(dev);
+	kfree(dev);
+}
+#else
+static int hts221_i2c_remove(struct i2c_client *client)
 {
 	struct hts221_dev *dev = i2c_get_clientdata(client);
 
@@ -137,6 +151,7 @@ int hts221_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id hts221_i2c_id[] = {
 	{ "hts221", 0 },

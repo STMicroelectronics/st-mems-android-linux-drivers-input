@@ -14,6 +14,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "asm330lhh_core.h"
 
@@ -131,6 +132,17 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void asm330lhh_spi_remove(struct spi_device *spi)
+{
+	/* TODO: check the function */
+	struct asm330lhh_data *cdata = spi_get_drvdata(spi);
+
+	asm330lhh_common_remove(cdata, spi->irq);
+	dev_info(cdata->dev, "%s: removed\n", ASM330LHH_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int asm330lhh_spi_remove(struct spi_device *spi)
 {
 	/* TODO: check the function */
@@ -142,6 +154,7 @@ static int asm330lhh_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int asm330lhh_suspend(struct device *dev)

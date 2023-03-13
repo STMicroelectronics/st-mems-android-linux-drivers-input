@@ -146,7 +146,20 @@ static int lsm303dlhc_mag_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-int lsm303dlhc_mag_i2c_remove(struct i2c_client *client)
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lsm303dlhc_mag_i2c_remove(struct i2c_client *client)
+{
+	struct lsm303dlhc_mag_status *stat = i2c_get_clientdata(client);
+
+#ifdef LSM303DLHC_DEBUG
+	dev_info(dev->dev, "driver removing\n");
+#endif
+
+	lsm303dlhc_mag_remove(stat);
+	kfree(stat);
+}
+#else
+static int lsm303dlhc_mag_i2c_remove(struct i2c_client *client)
 {
 	struct lsm303dlhc_mag_status *stat = i2c_get_clientdata(client);
 
@@ -159,6 +172,7 @@ int lsm303dlhc_mag_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id lsm303dlhc_mag_i2c_id[] = {
 	{ "lsm303dlhc_mag", 0 },

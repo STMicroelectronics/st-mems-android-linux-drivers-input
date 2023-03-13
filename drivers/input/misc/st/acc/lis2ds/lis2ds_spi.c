@@ -30,6 +30,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "lis2ds_core.h"
 
@@ -149,6 +150,17 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lis2ds_spi_remove(struct spi_device *spi)
+{
+	/* TODO: check the function */
+	struct lis2ds_data *cdata = spi_get_drvdata(spi);
+
+	lis2ds_common_remove(cdata, spi->irq);
+	dev_info(cdata->dev, "%s: removed\n", LIS2DS_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lis2ds_spi_remove(struct spi_device *spi)
 {
 	/* TODO: check the function */
@@ -160,6 +172,7 @@ static int lis2ds_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lis2ds_suspend(struct device *dev)

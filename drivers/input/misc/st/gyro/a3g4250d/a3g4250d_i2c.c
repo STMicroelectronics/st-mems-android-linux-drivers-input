@@ -114,6 +114,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void a3g4250d_i2c_remove(struct i2c_client *client)
+{
+	struct a3g4250d_data *cdata = i2c_get_clientdata(client);
+
+	a3g4250d_common_remove(cdata);
+	kfree(cdata);
+}
+#else
 static int a3g4250d_i2c_remove(struct i2c_client *client)
 {
 	struct a3g4250d_data *cdata = i2c_get_clientdata(client);
@@ -123,6 +132,7 @@ static int a3g4250d_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int a3g4250d_suspend(struct device *dev)

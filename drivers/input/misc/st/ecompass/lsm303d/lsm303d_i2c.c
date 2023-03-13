@@ -144,7 +144,20 @@ static int lsm303d_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-int lsm303d_i2c_remove(struct i2c_client *client)
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lsm303d_i2c_remove(struct i2c_client *client)
+{
+	struct lsm303d_dev *dev = i2c_get_clientdata(client);
+
+#ifdef LSM303D_DEBUG
+	dev_info(dev->dev, "driver removing\n");
+#endif
+
+	lsm303d_remove(dev);
+	kfree(dev);
+}
+#else
+static int lsm303d_i2c_remove(struct i2c_client *client)
 {
 	struct lsm303d_dev *dev = i2c_get_clientdata(client);
 
@@ -157,6 +170,7 @@ int lsm303d_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id lsm303d_i2c_id[] = {
 	{ "lsm303d", 0 },

@@ -29,6 +29,7 @@
 #include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "lis2dw12_core.h"
 
@@ -141,6 +142,14 @@ static int lis2dw12_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lis2dw12_spi_remove(struct spi_device *spi)
+{
+	struct lis2dw12_data *cdata = spi_get_drvdata(spi);
+
+	lis2dw12_common_remove(cdata, spi->irq);
+}
+#else
 static int lis2dw12_spi_remove(struct spi_device *spi)
 {
 	struct lis2dw12_data *cdata = spi_get_drvdata(spi);
@@ -149,6 +158,7 @@ static int lis2dw12_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lis2dw12_suspend(struct device *dev)

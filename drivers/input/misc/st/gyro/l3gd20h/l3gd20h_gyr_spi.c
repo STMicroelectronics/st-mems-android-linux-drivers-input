@@ -11,6 +11,7 @@
 #include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "l3gd20h.h"
 
@@ -151,7 +152,20 @@ static int l3gd20h_gyr_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int l3gd20h_gyr_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void l3gd20h_gyr_spi_remove(struct spi_device *spi)
+{
+	struct l3gd20h_gyr_status *stat = spi_get_drvdata(spi);
+
+#ifdef L3GD20H_DEBUG
+	dev_info(stat->dev, "driver removing\n");
+#endif
+
+	l3gd20h_gyr_remove(stat);
+	kfree(stat);
+}
+#else
+static int l3gd20h_gyr_spi_remove(struct spi_device *spi)
 {
 	struct l3gd20h_gyr_status *stat = spi_get_drvdata(spi);
 
@@ -164,6 +178,7 @@ int l3gd20h_gyr_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id l3gd20h_gyr_spi_id[] = {
 	{ "l3gd20h_gyr", 0 },

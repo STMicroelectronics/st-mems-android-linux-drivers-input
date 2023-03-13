@@ -153,7 +153,20 @@ static int ism303dac_mag_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-int ism303dac_mag_i2c_remove(struct i2c_client *client)
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void ism303dac_mag_i2c_remove(struct i2c_client *client)
+{
+	struct st_common_data *cdata = i2c_get_clientdata(client);
+
+#ifdef ISM303DAC_DEBUG
+	dev_info(cdata->dev, "driver removing\n");
+#endif
+
+	ism303dac_mag_remove(cdata);
+	kfree(cdata);
+}
+#else
+static int ism303dac_mag_i2c_remove(struct i2c_client *client)
 {
 	struct st_common_data *cdata = i2c_get_clientdata(client);
 
@@ -166,6 +179,7 @@ int ism303dac_mag_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 static const struct i2c_device_id ism303dac_mag_i2c_id[] = {
 	{ "ism303dac_mag", 0 },

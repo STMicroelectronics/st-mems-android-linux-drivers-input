@@ -121,6 +121,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lis3dh_acc_i2c_remove(struct i2c_client *client)
+{
+	struct lis3dh_acc_status *stat = i2c_get_clientdata(client);
+
+	lis3dh_acc_remove(stat);
+	kfree(stat);
+}
+#else
 static int lis3dh_acc_i2c_remove(struct i2c_client *client)
 {
 	struct lis3dh_acc_status *stat = i2c_get_clientdata(client);
@@ -130,6 +139,7 @@ static int lis3dh_acc_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lis3dh_acc_suspend(struct device *dev)

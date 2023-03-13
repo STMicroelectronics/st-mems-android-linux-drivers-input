@@ -10,6 +10,7 @@
 #include <linux/slab.h>
 #include <linux/spi/spi.h>
 #include <linux/input.h>
+#include <linux/version.h>
 
 #include "hts221_core.h"
 
@@ -147,7 +148,20 @@ static int hts221_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int hts221_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void hts221_spi_remove(struct spi_device *spi)
+{
+	struct hts221_dev *dev = spi_get_drvdata(spi);
+
+#ifdef HTS221_DEBUG
+	dev_info(&client->dev, "driver removing\n");
+#endif
+
+	hts221_remove(dev);
+	kfree(dev);
+}
+#else
+static int hts221_spi_remove(struct spi_device *spi)
 {
 	struct hts221_dev *dev = spi_get_drvdata(spi);
 
@@ -160,6 +174,7 @@ int hts221_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id hts221_spi_id[] = {
 	{ "hts221", 0 },

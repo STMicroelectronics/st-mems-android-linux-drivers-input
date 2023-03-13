@@ -30,6 +30,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "h3lis100dl.h"
 
@@ -142,6 +143,17 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void h3lis100dl_spi_remove(struct spi_device *spi)
+{
+	/* TODO: check the function */
+	struct h3lis100dl_data *cdata = spi_get_drvdata(spi);
+
+	h3lis100dl_common_remove(cdata);
+	dev_info(cdata->dev, "%s: removed\n", H3LIS100DL_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int h3lis100dl_spi_remove(struct spi_device *spi)
 {
 	/* TODO: check the function */
@@ -153,6 +165,7 @@ static int h3lis100dl_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int h3lis100dl_suspend(struct device *dev)

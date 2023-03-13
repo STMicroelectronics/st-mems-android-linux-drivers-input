@@ -15,6 +15,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "lsm6dsm_core.h"
 
@@ -132,6 +133,17 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm6dsm_spi_remove(struct spi_device *spi)
+{
+	/* TODO: check the function */
+	struct lsm6dsm_data *cdata = spi_get_drvdata(spi);
+
+	lsm6dsm_common_remove(cdata, spi->irq);
+	dev_info(cdata->dev, "%s: removed\n", LSM6DSM_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lsm6dsm_spi_remove(struct spi_device *spi)
 {
 	/* TODO: check the function */
@@ -143,6 +155,7 @@ static int lsm6dsm_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lsm6dsm_suspend(struct device *dev)

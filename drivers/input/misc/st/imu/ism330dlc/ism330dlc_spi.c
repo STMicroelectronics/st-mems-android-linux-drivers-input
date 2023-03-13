@@ -15,6 +15,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "ism330dlc_core.h"
 
@@ -132,6 +133,16 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void ism330dlc_spi_remove(struct spi_device *spi)
+{
+	struct ism330dlc_data *cdata = spi_get_drvdata(spi);
+
+	ism330dlc_common_remove(cdata, spi->irq);
+	dev_info(cdata->dev, "%s: removed\n", ISM330DLC_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int ism330dlc_spi_remove(struct spi_device *spi)
 {
 	struct ism330dlc_data *cdata = spi_get_drvdata(spi);
@@ -142,6 +153,7 @@ static int ism330dlc_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int ism330dlc_suspend(struct device *dev)

@@ -175,7 +175,20 @@ static int lsm303ah_mag_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int lsm303ah_mag_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm303ah_mag_spi_remove(struct spi_device *spi)
+{
+	struct st_common_data *cdata = spi_get_drvdata(spi);
+
+#ifdef LSM303AH_DEBUG
+	dev_info(cdata->dev, "driver removing\n");
+#endif
+
+	lsm303ah_mag_remove(cdata);
+	kfree(cdata);
+}
+#else
+static int lsm303ah_mag_spi_remove(struct spi_device *spi)
 {
 	struct st_common_data *cdata = spi_get_drvdata(spi);
 
@@ -188,6 +201,7 @@ int lsm303ah_mag_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lsm303ah_mag_spi_id[] = {
 	{ "lsm303ah_mag", 0 },

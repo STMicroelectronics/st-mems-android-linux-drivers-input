@@ -15,6 +15,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -99,6 +100,16 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lsm6ds0_i2c_remove(struct i2c_client *client)
+{
+	struct lsm6ds0_status *cdata = i2c_get_clientdata(client);
+
+	lsm6ds0_common_remove(cdata);
+	dev_info(cdata->dev, "%s: removed\n", LSM6DS0_ACC_GYR_DEV_NAME);
+	kfree(cdata);
+}
+#else
 static int lsm6ds0_i2c_remove(struct i2c_client *client)
 {
 	struct lsm6ds0_status *cdata = i2c_get_clientdata(client);
@@ -109,6 +120,7 @@ static int lsm6ds0_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lsm6ds0_suspend(struct device *dev)

@@ -11,6 +11,7 @@
 #include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "lsm330.h"
 
@@ -150,7 +151,20 @@ static int lsm330_gyr_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int lsm330_gyr_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm330_gyr_spi_remove(struct spi_device *spi)
+{
+	struct lsm330_gyr_status *stat = spi_get_drvdata(spi);
+
+#ifdef LSM330_DEBUG
+	dev_info(stat->dev, "driver removing\n");
+#endif
+
+	lsm330_gyr_remove(stat);
+	kfree(stat);
+}
+#else
+static int lsm330_gyr_spi_remove(struct spi_device *spi)
 {
 	struct lsm330_gyr_status *stat = spi_get_drvdata(spi);
 
@@ -163,6 +177,7 @@ int lsm330_gyr_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lsm330_gyr_spi_id[] = {
 	{ "lsm330_gyr", 0 },

@@ -32,6 +32,7 @@
 #include <linux/hrtimer.h>
 #include <linux/input.h>
 #include <linux/types.h>
+#include <linux/version.h>
 
 #include "lis2dw12_core.h"
 
@@ -119,6 +120,14 @@ static int lis2dw12_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
+#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+static void lis2dw12_i2c_remove(struct i2c_client *client)
+{
+	struct lis2dw12_data *cdata = i2c_get_clientdata(client);
+
+	lis2dw12_common_remove(cdata, client->irq);
+}
+#else
 static int lis2dw12_i2c_remove(struct i2c_client *client)
 {
 	struct lis2dw12_data *cdata = i2c_get_clientdata(client);
@@ -127,6 +136,7 @@ static int lis2dw12_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int lis2dw12_suspend(struct device *dev)

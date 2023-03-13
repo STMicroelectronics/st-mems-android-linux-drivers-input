@@ -175,7 +175,20 @@ static int ism303dac_mag_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int ism303dac_mag_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void ism303dac_mag_spi_remove(struct spi_device *spi)
+{
+	struct st_common_data *cdata = spi_get_drvdata(spi);
+
+#ifdef ISM303DAC_DEBUG
+	dev_info(cdata->dev, "driver removing\n");
+#endif
+
+	ism303dac_mag_remove(cdata);
+	kfree(cdata);
+}
+#else
+static int ism303dac_mag_spi_remove(struct spi_device *spi)
 {
 	struct st_common_data *cdata = spi_get_drvdata(spi);
 
@@ -188,6 +201,7 @@ int ism303dac_mag_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id ism303dac_mag_spi_id[] = {
 	{ "ism303dac_mag", 0 },

@@ -11,6 +11,7 @@
 #include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "lsm9ds0.h"
 
@@ -150,7 +151,20 @@ static int lsm9ds0_acc_mag_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-int lsm9ds0_acc_mag_spi_remove(struct spi_device *spi)
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm9ds0_acc_mag_spi_remove(struct spi_device *spi)
+{
+	struct lsm9ds0_dev *dev = spi_get_drvdata(spi);
+
+#ifdef LSM9DS0_DEBUG
+	dev_info(dev->dev, "driver removing\n");
+#endif
+
+	lsm9ds0_remove(dev);
+	kfree(dev);
+}
+#else
+static int lsm9ds0_acc_mag_spi_remove(struct spi_device *spi)
 {
 	struct lsm9ds0_dev *dev = spi_get_drvdata(spi);
 
@@ -163,6 +177,7 @@ int lsm9ds0_acc_mag_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lsm9ds0_acc_mag_spi_id[] = {
 	{ "lsm9ds0_acc_mag", 0 },

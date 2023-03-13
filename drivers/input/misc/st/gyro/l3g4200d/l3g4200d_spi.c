@@ -137,6 +137,15 @@ free_data:
 	return err;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void l3g4200d_spi_remove(struct spi_device *spi)
+{
+	struct l3g4200d_data *cdata = spi_get_drvdata(spi);
+
+	l3g4200d_common_remove(cdata);
+	kfree(cdata);
+}
+#else
 static int l3g4200d_spi_remove(struct spi_device *spi)
 {
 	struct l3g4200d_data *cdata = spi_get_drvdata(spi);
@@ -146,6 +155,7 @@ static int l3g4200d_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int l3g4200d_suspend(struct device *dev)

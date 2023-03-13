@@ -158,6 +158,15 @@ static int lsm303d_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
+#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+static void lsm303d_spi_remove(struct spi_device *spi)
+{
+	struct lsm303d_dev *dev = spi_get_drvdata(spi);
+
+	lsm303d_remove(dev);
+	kfree(dev);
+}
+#else
 static int lsm303d_spi_remove(struct spi_device *spi)
 {
 	struct lsm303d_dev *dev = spi_get_drvdata(spi);
@@ -167,6 +176,7 @@ static int lsm303d_spi_remove(struct spi_device *spi)
 
 	return 0;
 }
+#endif
 
 static const struct spi_device_id lsm303d_spi_ids[] = {
 	{ "lsm303d", 0 },
