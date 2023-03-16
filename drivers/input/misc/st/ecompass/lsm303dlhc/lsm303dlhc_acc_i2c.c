@@ -115,7 +115,7 @@ static int lsm303dlhc_acc_i2c_probe(struct i2c_client *client,
 	int err;
 	struct lsm303dlhc_acc_status *stat;
 
-#ifdef lsm303dlhc_DEBUG
+#ifdef LSM303DLHC_DEBUG
 	dev_info(&client->dev, "probe start.\n");
 #endif
 
@@ -149,7 +149,7 @@ int lsm303dlhc_acc_i2c_remove(struct i2c_client *client)
 {
 	struct lsm303dlhc_acc_status *stat = i2c_get_clientdata(client);
 
-#ifdef lsm303dlhc_DEBUG
+#ifdef LSM303DLHC_DEBUG
 	dev_info(dev->dev, "driver removing\n");
 #endif
 

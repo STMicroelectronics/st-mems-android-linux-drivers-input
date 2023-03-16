@@ -115,7 +115,7 @@ static int lsm303c_acc_spi_probe(struct spi_device *spi)
 	int err;
 	struct lsm303c_acc_dev *dev;
 
-#ifdef lsm303c_DEBUG
+#ifdef LSM303C_DEBUG
 	dev_info(&spi->dev, "probe start.\n");
 #endif
 
@@ -147,7 +147,7 @@ int lsm303c_acc_spi_remove(struct spi_device *spi)
 {
 	struct lsm303c_acc_dev *dev = spi_get_drvdata(spi);
 
-#ifdef lsm303c_DEBUG
+#ifdef LSM303C_DEBUG
 	dev_info(dev->dev, "driver removing\n");
 #endif
 
