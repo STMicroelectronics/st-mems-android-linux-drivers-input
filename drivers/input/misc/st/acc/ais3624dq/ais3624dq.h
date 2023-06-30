@@ -28,6 +28,14 @@
 
 #define	AIS3624DQ_ACC_DEV_NAME	"ais3624dq_acc"
 
+#define	AIS3624DQ_ACC_MIN_POLL_PERIOD_MS 1
+
+/* to set gpios numb connected to interrupt pins,
+* the unused ones have to be set to -EINVAL
+*/
+#define AIS3624DQ_ACC_DEFAULT_INT1_GPIO	(-EINVAL)
+#define AIS3624DQ_ACC_DEFAULT_INT2_GPIO	(-EINVAL)
+
 /************************************************/
 /* 	Accelerometer section defines	 	*/
 /************************************************/

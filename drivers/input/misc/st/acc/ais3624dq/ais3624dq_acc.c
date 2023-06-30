@@ -131,6 +131,20 @@ static struct {
 	{2000, AIS3624DQ_ACC_ODRHALF | AIS3624DQ_ACC_ODR1000 },
 };
 
+static struct ais3624dq_acc_platform_data default_ais3624dq_acc_pdata = {
+	.g_range = AIS3624DQ_ACC_G_6G,
+	.axis_map_x = 0,
+	.axis_map_y = 1,
+	.axis_map_z = 2,
+	.negate_x = 0,
+	.negate_y = 0,
+	.negate_z = 0,
+	.poll_interval = 100,
+	.min_interval = AIS3624DQ_ACC_MIN_POLL_PERIOD_MS,
+	.gpio_int1 = AIS3624DQ_ACC_DEFAULT_INT1_GPIO,
+	.gpio_int2 = AIS3624DQ_ACC_DEFAULT_INT2_GPIO,
+};
+
 static int ais3624dq_acc_hw_init(struct ais3624dq_acc_data *acc)
 {
 	int err = -1;
@@ -974,14 +988,12 @@ int ais3624dq_acc_probe(struct ais3624dq_acc_data *acc)
 {
 	int err = -1;
 
-	if (acc->dev->platform_data == NULL) {
-		dev_err(acc->dev, "platform data is NULL. exiting.\n");
-		return -ENODEV;
-	}
+	pr_info("%s: probe start.\n", AIS3624DQ_ACC_DEV_NAME);
 
+	mutex_init(&acc->lock);
 	mutex_lock(&acc->lock);
 
-	acc->pdata = kmalloc(sizeof(*acc->pdata), GFP_KERNEL);
+	acc->pdata = kzalloc(sizeof(struct ais3624dq_acc_platform_data), GFP_KERNEL);
 	if (acc->pdata == NULL) {
 		err = -ENOMEM;
 		dev_err(acc->dev,
@@ -990,7 +1002,14 @@ int ais3624dq_acc_probe(struct ais3624dq_acc_data *acc)
 		goto err_mutexunlock;
 	}
 
-	memcpy(acc->pdata, acc->dev->platform_data, sizeof(*acc->pdata));
+	if (acc->dev->platform_data == NULL) {
+		memcpy(acc->pdata, &default_ais3624dq_acc_pdata,
+		       sizeof(struct ais3624dq_acc_platform_data));
+		dev_info(acc->dev, "using default plaform_data\n");
+	} else {
+		memcpy(acc->pdata, acc->dev->platform_data,
+		       sizeof(struct ais3624dq_acc_platform_data));
+	}
 
 	err = ais3624dq_acc_validate_pdata(acc);
 	if (err < 0) {
@@ -1104,6 +1123,8 @@ int ais3624dq_acc_probe(struct ais3624dq_acc_data *acc)
 	}
 
 	mutex_unlock(&acc->lock);
+
+	dev_info(acc->dev, "%s: probed\n", AIS3624DQ_ACC_DEV_NAME);
 
 	return 0;
 
