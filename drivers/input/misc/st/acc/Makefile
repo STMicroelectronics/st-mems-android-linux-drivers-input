@@ -2,6 +2,7 @@
 # Makefile for the input misc STM acc drivers.
 #
 
+obj-$(CONFIG_INPUT_AIS2DW12) += ais2dw12/
 obj-$(CONFIG_INPUT_AIS2IH) += ais2ih/
 obj-$(CONFIG_INPUT_AIS328DQ) += ais328dq/
 obj-$(CONFIG_INPUT_AIS3624DQ) += ais3624dq/

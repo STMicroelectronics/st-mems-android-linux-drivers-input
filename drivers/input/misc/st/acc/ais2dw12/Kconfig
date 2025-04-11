@@ -1,0 +1,20 @@
+config INPUT_AIS2DW12
+	tristate "STMicroelectronics AIS2DW12 sensors"
+	depends on (I2C || SPI) && SYSFS
+	select INPUT_AIS2DW12_I2C if (I2C)
+	select INPUT_AIS2DW12_SPI if (SPI)
+	help
+	   This driver support the STMicroelectronics AIS2DW12 sensors.
+
+	   To compile this driver as a module, choose M here. The module
+	   will be called ais2dw12.
+
+config INPUT_AIS2DW12_I2C
+	tristate
+	depends on INPUT_AIS2DW12
+	depends on I2C
+
+config INPUT_AIS2DW12_SPI
+	tristate
+	depends on INPUT_AIS2DW12
+	depends on SPI
