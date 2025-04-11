@@ -4,6 +4,7 @@ menuconfig INPUT_ACC
 
 if INPUT_ACC
 
+source "drivers/input/misc/st/acc/ais2ih/Kconfig"
 source "drivers/input/misc/st/acc/ais328dq/Kconfig"
 source "drivers/input/misc/st/acc/ais3624dq/Kconfig"
 source "drivers/input/misc/st/acc/lis2dh/Kconfig"
