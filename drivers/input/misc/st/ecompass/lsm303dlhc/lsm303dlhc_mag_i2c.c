@@ -110,8 +110,12 @@ static const struct of_device_id lsm303dlhc_mag_i2c_id_table[] = {
 MODULE_DEVICE_TABLE(of, lsm303dlhc_mag_i2c_id_table);
 #endif /* CONFIG_OF */
 
+#if KERNEL_VERSION(6, 2, 0) <= LINUX_VERSION_CODE
+static int lsm303dlhc_mag_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lsm303dlhc_mag_i2c_probe(struct i2c_client *client,
-				    const struct i2c_device_id *id)
+						const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lsm303dlhc_mag_status *stat;

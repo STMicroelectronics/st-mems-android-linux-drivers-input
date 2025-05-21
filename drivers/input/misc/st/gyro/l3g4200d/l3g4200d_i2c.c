@@ -85,8 +85,12 @@ static struct l3g4200d_transfer_function l3g4200d_tf_i2c = {
 	.read = l3g4200d_i2c_read,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int l3g4200d_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int l3g4200d_i2c_probe(struct i2c_client *client,
-			        const struct i2c_device_id *id)
+			      const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct l3g4200d_data *cdata;

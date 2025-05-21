@@ -101,8 +101,12 @@ static const struct of_device_id lsm9ds1_acc_gyr_i2c_id_table[] = {
 MODULE_DEVICE_TABLE(of, lsm9ds1_acc_gyr_i2c_id_table);
 #endif /* CONFIG_OF */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lsm9ds1_acc_gyr_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lsm9ds1_acc_gyr_i2c_probe(struct i2c_client *client,
 				     const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lsm9ds1_acc_gyr_dev *dev;

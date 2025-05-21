@@ -423,8 +423,13 @@ static SIMPLE_DEV_PM_OPS(stts22h_pm_ops, stts22h_suspend,
 #define STTS22H_PM_OPS	NULL
 #endif /* CONFIG_PM_SLEEP */
 
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int stts22h_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int stts22h_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	struct device *dev = &client->dev;
 	struct stts22h_sensor *sensor;

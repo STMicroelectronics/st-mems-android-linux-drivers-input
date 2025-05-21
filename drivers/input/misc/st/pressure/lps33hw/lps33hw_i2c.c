@@ -71,8 +71,12 @@ static const struct lps33_prs_transfer_function lps33hw_tf_i2c = {
 	.read = lps33hw_i2c_read,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lps33hw_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lps33hw_i2c_probe(struct i2c_client *client,
 			     const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lps33_prs_data *cdata;

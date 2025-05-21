@@ -100,8 +100,12 @@ static SIMPLE_DEV_PM_OPS(l3gd20_gyr_pm_ops,
 #define L3GD20_PM_OPS	NULL
 #endif /* CONFIG_PM_SLEEP */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int l3gd20_gyr_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int l3gd20_gyr_i2c_probe(struct i2c_client *client,
-				 const struct i2c_device_id *id)
+				const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct l3gd20_gyr_status *stat;

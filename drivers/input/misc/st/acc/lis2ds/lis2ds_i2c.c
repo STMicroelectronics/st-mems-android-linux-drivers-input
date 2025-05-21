@@ -95,8 +95,12 @@ static const struct lis2ds_transfer_function lis2ds_tf_i2c = {
 	.read = lis2ds_i2c_read,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lis2ds_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lis2ds_i2c_probe(struct i2c_client *client,
 			    const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lis2ds_data *cdata;

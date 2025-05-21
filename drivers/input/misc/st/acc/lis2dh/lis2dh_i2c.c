@@ -94,8 +94,12 @@ static struct lis2dh_acc_transfer_function lis2dh_acc_tf_i2c = {
 	.read = lis2dh_acc_i2c_read,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lis2dh_acc_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lis2dh_acc_i2c_probe(struct i2c_client *client,
-			        const struct i2c_device_id *id)
+				const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lis2dh_acc_status *stat;

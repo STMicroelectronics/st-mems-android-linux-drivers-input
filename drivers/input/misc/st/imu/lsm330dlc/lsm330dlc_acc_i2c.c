@@ -101,8 +101,12 @@ static SIMPLE_DEV_PM_OPS(lsm330dlc_acc_pm_ops,
 #define LSM330DLC_ACC_PM_OPS		NULL
 #endif /* CONFIG_PM_SLEEP */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lsm330dlc_acc_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lsm330dlc_acc_i2c_probe(struct i2c_client *client,
 				   const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lsm330dlc_acc_dev *dev;

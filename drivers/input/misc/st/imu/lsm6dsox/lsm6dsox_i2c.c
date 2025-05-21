@@ -80,8 +80,24 @@ static const struct lsm6dsox_transfer_function lsm6dsox_tf_i2c = {
 	.read = lsm6dsox_i2c_read,
 };
 
+static int __lsm6dsox_i2c_probe(struct i2c_client *client,
+				const struct i2c_device_id *id);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lsm6dsox_i2c_probe(struct i2c_client *client)
+{
+	const struct i2c_device_id *id = i2c_client_get_device_id(client);
+	return __lsm6dsox_i2c_probe(client, id);
+}
+#else /* LINUX_VERSION_CODE */
 static int lsm6dsox_i2c_probe(struct i2c_client *client,
 			      const struct i2c_device_id *id)
+{
+	return __lsm6dsox_i2c_probe(client, id);
+}
+#endif /* LINUX_VERSION_CODE */
+
+static int __lsm6dsox_i2c_probe(struct i2c_client *client,
+				const struct i2c_device_id *id)
 {
 	struct lsm6dsox_data *cdata;
 	int hw_id = id->driver_data;

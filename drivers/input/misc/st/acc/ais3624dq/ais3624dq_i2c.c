@@ -97,8 +97,12 @@ static struct ais3624dq_transfer_function ais3624dq_tf_i2c = {
 	.read = ais3624dq_i2c_read,
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int ais3624dq_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int ais3624dq_i2c_probe(struct i2c_client *client,
 			       const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct ais3624dq_acc_data *acc;

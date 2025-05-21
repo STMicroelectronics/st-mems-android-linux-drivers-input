@@ -101,8 +101,12 @@ static SIMPLE_DEV_PM_OPS(lsm330_gyr_pm_ops,
 #define LSM330_GYR_PM_OPS		NULL
 #endif /* CONFIG_PM_SLEEP */
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int lsm330_gyr_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lsm330_gyr_i2c_probe(struct i2c_client *client,
 				const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lsm330_gyr_status *stat;

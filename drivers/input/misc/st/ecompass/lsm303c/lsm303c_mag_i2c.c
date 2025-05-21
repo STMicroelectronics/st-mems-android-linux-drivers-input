@@ -100,8 +100,12 @@ static SIMPLE_DEV_PM_OPS(lsm303c_mag_pm_ops,
 #define LSM303C_MAG_PM_OPS	NULL
 #endif /* CONFIG_PM_SLEEP */
 
+#if KERNEL_VERSION(6, 2, 0) <= LINUX_VERSION_CODE
+static int lsm303c_mag_i2c_probe(struct i2c_client *client)
+#else /* LINUX_VERSION_CODE */
 static int lsm303c_mag_i2c_probe(struct i2c_client *client,
-				     const struct i2c_device_id *id)
+						const struct i2c_device_id *id)
+#endif /* LINUX_VERSION_CODE */
 {
 	int err;
 	struct lsm303c_mag_dev *dev;
