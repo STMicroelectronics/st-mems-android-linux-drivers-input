@@ -23,7 +23,12 @@
 #include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/pm.h>
+
+#if KERNEL_VERSION(6, 12, 0) <= LINUX_VERSION_CODE
+#include <linux/unaligned.h>
+#else /* LINUX_VERSION_CODE */
 #include <asm-generic/unaligned.h>
+#endif /* LINUX_VERSION_CODE */
 
 #include "lps22df.h"
 

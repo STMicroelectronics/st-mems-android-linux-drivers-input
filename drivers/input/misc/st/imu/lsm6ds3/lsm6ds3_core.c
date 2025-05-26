@@ -18,7 +18,13 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
-#include <asm/unaligned.h>
+#include <linux/version.h>
+
+#if KERNEL_VERSION(6, 12, 0) <= LINUX_VERSION_CODE
+#include <linux/unaligned.h>
+#else /* LINUX_VERSION_CODE */
+#include <asm-generic/unaligned.h>
+#endif /* LINUX_VERSION_CODE */
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
