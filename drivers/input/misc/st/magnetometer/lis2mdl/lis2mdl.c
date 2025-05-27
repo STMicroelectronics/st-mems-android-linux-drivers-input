@@ -108,7 +108,7 @@ static void lis2mdl_poll_wk(struct work_struct *input_work)
 	}
 }
 
-int lis2mdl_write_odr(struct lis2mdl_data *sdata) {
+static int lis2mdl_write_odr(struct lis2mdl_data *sdata) {
 	int i;
 
 	for (i = 0; i < LIS2MDL_ODR_LIST_NUM; i++) {
@@ -124,7 +124,7 @@ int lis2mdl_write_odr(struct lis2mdl_data *sdata) {
 				lis2mdl_odr_table_t[i].value);
 }
 
-int lis2mdl_enable_sensors(struct lis2mdl_data *sdata)
+static int lis2mdl_enable_sensors(struct lis2mdl_data *sdata)
 {
 	int err;
 
@@ -143,7 +143,7 @@ int lis2mdl_enable_sensors(struct lis2mdl_data *sdata)
 	return 0;
 }
 
-int lis2mdl_disable_sensor(struct lis2mdl_data *sdata)
+static int lis2mdl_disable_sensor(struct lis2mdl_data *sdata)
 {
 	int err;
 
@@ -163,13 +163,13 @@ int lis2mdl_disable_sensor(struct lis2mdl_data *sdata)
 	return 0;
 }
 
-ssize_t lis2mdl_get_scale_avail(struct device *dev,
+static ssize_t lis2mdl_get_scale_avail(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	return sprintf(buf, "50\n");
 }
 
-int lis2mdl_init_sensor(struct st_common_data *cdata)
+static int lis2mdl_init_sensor(struct st_common_data *cdata)
 {
 	int err;
 	struct lis2mdl_data *sdata = cdata->sensors;
@@ -221,7 +221,7 @@ static const struct attribute_group lis2mdl_attribute_groups = {
 	.name = LIS2MDL_SENSOR_NAME,
 };
 
-int lis2mdl_data_init(struct st_common_data *cdata)
+static int lis2mdl_data_init(struct st_common_data *cdata)
 {
 	struct lis2mdl_data *sdata = cdata->sensors;
 

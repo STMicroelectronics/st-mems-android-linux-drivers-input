@@ -312,7 +312,7 @@ static void lis3dhh_acc_input_poll_work_func(struct work_struct *work)
 	lis3dhh_acc_report_triple(stat);
 }
 
-enum hrtimer_restart lis3dhh_acc_hr_timer_poll_function(struct hrtimer *timer)
+static enum hrtimer_restart lis3dhh_acc_hr_timer_poll_function(struct hrtimer *timer)
 {
 	struct lis3dhh_acc_status *stat;
 
@@ -326,14 +326,14 @@ enum hrtimer_restart lis3dhh_acc_hr_timer_poll_function(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-int lis3dhh_acc_input_open(struct input_dev *input)
+static int lis3dhh_acc_input_open(struct input_dev *input)
 {
 	struct lis3dhh_acc_status *stat = input_get_drvdata(input);
 
 	return lis3dhh_acc_enable(stat);
 }
 
-void lis3dhh_acc_input_close(struct input_dev *dev)
+static void lis3dhh_acc_input_close(struct input_dev *dev)
 {
 	struct lis3dhh_acc_status *stat = input_get_drvdata(dev);
 

@@ -302,7 +302,7 @@ static void lps22_prs_device_power_off(struct lps22_prs_data *prs)
 	prs->hw_initialized = 0;
 }
 
-int lps22_prs_update_odr(struct lps22_prs_data *prs, int poll_period_ms)
+static int lps22_prs_update_odr(struct lps22_prs_data *prs, int poll_period_ms)
 {
 	int err = -1;
 	int i;

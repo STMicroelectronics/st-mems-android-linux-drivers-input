@@ -385,7 +385,7 @@ static void lsm303ah_acc_poll_wk(struct work_struct *input_work)
 	}
 }
 
-u8 lsm303ah_event_irq1_value(struct st_common_data *cdata)
+static u8 lsm303ah_event_irq1_value(struct st_common_data *cdata)
 {
 	u8 value = 0x0;
 	priv_data_t *priv = GET_PDATA(cdata);
@@ -405,7 +405,7 @@ u8 lsm303ah_event_irq1_value(struct st_common_data *cdata)
 	return value;
 }
 
-u8 lsm303ah_event_irq2_value(struct st_common_data *cdata)
+static u8 lsm303ah_event_irq2_value(struct st_common_data *cdata)
 {
 	u8 value = 0x0;
 	priv_data_t *priv = GET_PDATA(cdata);
@@ -423,7 +423,8 @@ u8 lsm303ah_event_irq2_value(struct st_common_data *cdata)
 	return value;
 }
 
-int lsm303ah_acc_set_enable_function(struct st_common_data *cdata, bool state,
+static int __maybe_unused
+lsm303ah_acc_set_enable_function(struct st_common_data *cdata, bool state,
 				 u8 func_bit_mask)
 {
 	int err = 0;
@@ -436,10 +437,10 @@ int lsm303ah_acc_set_enable_function(struct st_common_data *cdata, bool state,
 	return 0;
 }
 
-int lsm303ah_update_drdy_irq(struct st_sensor_data *sdata)
+static int lsm303ah_update_drdy_irq(struct st_sensor_data *sdata)
 {
 	u8 reg_addr, reg_val, reg_mask;
-	
+
 	switch (sdata->sindex) {
 		case LSM303AH_FF:
 		case LSM303AH_TAP:
@@ -474,7 +475,7 @@ int lsm303ah_update_drdy_irq(struct st_sensor_data *sdata)
 	return st_sensor_write_data(sdata->cdata, reg_addr, reg_mask, reg_val);
 }
 
-int lsm303ah_set_fs(struct st_sensor_data *sdata, unsigned int fs)
+static int lsm303ah_set_fs(struct st_sensor_data *sdata, unsigned int fs)
 {
 	int err, i;
 	u8 pmode = GET_PDATA(sdata->cdata)->power_mode;
@@ -498,8 +499,9 @@ int lsm303ah_set_fs(struct st_sensor_data *sdata, unsigned int fs)
 	return 0;
 }
 
-void lsm303ah_event_management(struct st_common_data *cdata, u8 int_reg_val,
-								u8 ck_gate_val)
+static void
+lsm303ah_event_management(struct st_common_data *cdata, u8 int_reg_val,
+			  u8 ck_gate_val)
 {
 	priv_data_t *priv = GET_PDATA(cdata);
 
@@ -552,7 +554,7 @@ void lsm303ah_event_management(struct st_common_data *cdata, u8 int_reg_val,
 	}
 }
 
-void lsm303ah_irq_management(struct work_struct *irq_work)
+static void lsm303ah_irq_management(struct work_struct *irq_work)
 {
 	priv_data_t *priv;
 	u8 status[4], func[2];
@@ -577,7 +579,7 @@ void lsm303ah_irq_management(struct work_struct *irq_work)
 	return;
 }
 
-int lsm303ah_acc_write_odr(struct st_sensor_data *sdata) {
+static int lsm303ah_acc_write_odr(struct st_sensor_data *sdata) {
 	int err, i;
 	u32 max_odr = 0;
 	priv_data_t *priv = GET_PDATA(sdata->cdata);
@@ -610,7 +612,8 @@ int lsm303ah_acc_write_odr(struct st_sensor_data *sdata) {
 	return 0;
 }
 
-int lsm303ah_configure_tap_event(struct st_sensor_data *sdata, bool single_tap)
+static int __maybe_unused
+lsm303ah_configure_tap_event(struct st_sensor_data *sdata, bool single_tap)
 {
 	u8 err = 0;
 
@@ -647,7 +650,7 @@ int lsm303ah_configure_tap_event(struct st_sensor_data *sdata, bool single_tap)
 	return err;
 }
 
-int lsm303ah_update_event_functions(struct st_common_data *cdata)
+static int lsm303ah_update_event_functions(struct st_common_data *cdata)
 {
 	u8 reg_val = 0;
 	priv_data_t *priv = GET_PDATA(cdata);
@@ -667,7 +670,7 @@ int lsm303ah_update_event_functions(struct st_common_data *cdata)
 						LSM303AH_F_CTRL_EV_MASK);
 }
 
-int lsm303ah_set_enable(struct st_sensor_data *sdata, bool state)
+static int lsm303ah_set_enable(struct st_sensor_data *sdata, bool state)
 {
 	int err = 0;
 	priv_data_t *priv = GET_PDATA(sdata->cdata);
@@ -748,17 +751,17 @@ enable_sensor_error:
 	return err;
 }
 
-int lsm303ah_acc_enable_sensors(struct st_sensor_data *sdata)
+static int lsm303ah_acc_enable_sensors(struct st_sensor_data *sdata)
 {
 	return lsm303ah_set_enable(sdata, true);
 }
 
-int lsm303ah_acc_disable_sensors(struct st_sensor_data *sdata)
+static int lsm303ah_acc_disable_sensors(struct st_sensor_data *sdata)
 {
 	return lsm303ah_set_enable(sdata, false);
 }
 
-ssize_t lsm303ah_acc_get_scale_avail(struct device *dev,
+static ssize_t lsm303ah_acc_get_scale_avail(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	int i, len = 0;
@@ -772,7 +775,7 @@ ssize_t lsm303ah_acc_get_scale_avail(struct device *dev,
 	return len;
 }
 
-ssize_t lsm303ah_acc_get_cur_scale(struct device *dev,
+static ssize_t lsm303ah_acc_get_cur_scale(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	int i;
@@ -787,8 +790,9 @@ ssize_t lsm303ah_acc_get_cur_scale(struct device *dev,
 	return sprintf(buf, "%d\n", lsm303ah_fs_table.fs_avl[i].urv);
 }
 
-ssize_t lsm303ah_acc_set_cur_scale(struct device *dev, struct device_attribute *attr,
-						const char *buf, size_t count)
+static ssize_t
+lsm303ah_acc_set_cur_scale(struct device *dev, struct device_attribute *attr,
+			   const char *buf, size_t count)
 {
 	int urv, err;
 	struct st_sensor_data *sdata = dev_get_drvdata(dev);
@@ -843,9 +847,9 @@ static ssize_t lsm303ah_acc_set_resolution_mode(struct device *dev,
 	return count;
 }
 
-ssize_t lsm303ah_reset_step_counter(struct device *dev,
-						struct device_attribute *attr,
-						const char *buf, size_t count)
+static ssize_t lsm303ah_reset_step_counter(struct device *dev,
+					   struct device_attribute *attr,
+					   const char *buf, size_t count)
 {
 	int err;
 	struct st_sensor_data *sdata = dev_get_drvdata(dev);
@@ -859,7 +863,7 @@ ssize_t lsm303ah_reset_step_counter(struct device *dev,
 	return count;
 }
 
-int lsm303ah_init_sensors(struct st_common_data *cdata)
+static int lsm303ah_init_sensors(struct st_common_data *cdata)
 {
 	int err, i;
 	struct st_sensor_data *sdata;
@@ -979,7 +983,7 @@ static irqreturn_t lsm303ah_save_tstamp(int irq, void *private)
 	return IRQ_HANDLED;
 }
 
-int lsm303ah_allocate_workqueue(struct st_common_data *cdata)
+static int lsm303ah_allocate_workqueue(struct st_common_data *cdata)
 {
 	int err;
 
@@ -1116,7 +1120,7 @@ static const struct attribute_group lsm303ah_attribute_groups[] = {
 	},
 };
 
-int lsm303ah_sensors_data_init(struct st_common_data *cdata)
+static int lsm303ah_sensors_data_init(struct st_common_data *cdata)
 {
 	int32_t i;
 	bool is_3_axis;

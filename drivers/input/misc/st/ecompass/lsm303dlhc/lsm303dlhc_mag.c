@@ -132,7 +132,7 @@ static const struct lsm303dlhc_mag_platform_data default_lsm303dlhc_mag_pdata = 
 	.negate_z = 0,
 };
 
-int lsm303dlhc_mag_update_fs_range(struct lsm303dlhc_mag_status *stat,
+static int lsm303dlhc_mag_update_fs_range(struct lsm303dlhc_mag_status *stat,
 								u8 new_fs_range)
 {
 	int err = -1;
@@ -182,7 +182,7 @@ int lsm303dlhc_mag_update_fs_range(struct lsm303dlhc_mag_status *stat,
 	return 0;
 }
 
-int lsm303dlhc_mag_update_odr(struct lsm303dlhc_mag_status *stat,
+static int lsm303dlhc_mag_update_odr(struct lsm303dlhc_mag_status *stat,
 							int poll_interval)
 {
 	int err = -1;

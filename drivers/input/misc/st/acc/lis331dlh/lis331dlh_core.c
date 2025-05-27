@@ -331,7 +331,7 @@ static void lis331dlh_irq2_work_func(struct work_struct *work)
 	enable_irq(acc->irq2);
 }
 
-int lis331dlh_update_g_range(struct lis331dlh_data *acc, u8 new_g_range)
+static int lis331dlh_update_g_range(struct lis331dlh_data *acc, u8 new_g_range)
 {
 	int err = -1;
 	u8 sensitivity;
@@ -386,7 +386,7 @@ error:
 	return err;
 }
 
-int lis331dlh_update_odr(struct lis331dlh_data *acc, int poll_interval_ms)
+static int lis331dlh_update_odr(struct lis331dlh_data *acc, int poll_interval_ms)
 {
 	int err = -1;
 	int i;

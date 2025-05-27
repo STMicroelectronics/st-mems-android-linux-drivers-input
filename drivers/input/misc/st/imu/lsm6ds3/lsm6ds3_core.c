@@ -457,7 +457,7 @@ static void lsm6ds3_push_data(struct work_struct *input_work)
 	}
 }
 
-int lsm6ds3_set_drdy_irq(struct lsm6ds3_sensor_data *sdata, bool state)
+static int lsm6ds3_set_drdy_irq(struct lsm6ds3_sensor_data *sdata, bool state)
 {
 	u8 reg_addr, mask, value;
 
@@ -578,7 +578,7 @@ static irqreturn_t lsm6ds3_irq_management(int irq, void *private)
 	return IRQ_HANDLED;
 }
 
-int lsm6ds3_allocate_workqueue(struct lsm6ds3_data *cdata)
+static int lsm6ds3_allocate_workqueue(struct lsm6ds3_data *cdata)
 {
 	int err;
 

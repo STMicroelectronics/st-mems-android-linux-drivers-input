@@ -329,7 +329,7 @@ static void ais328dq_acc_irq2_work_func(struct work_struct *work)
 	enable_irq(acc->irq2);
 }
 
-int ais328dq_acc_update_g_range(struct ais328dq_acc_data *acc, u8 range)
+static int ais328dq_acc_update_g_range(struct ais328dq_acc_data *acc, u8 range)
 {
 	int err = -1;
 
@@ -391,7 +391,7 @@ error:
 	return err;
 }
 
-int ais328dq_acc_update_odr(struct ais328dq_acc_data *acc,
+static int ais328dq_acc_update_odr(struct ais328dq_acc_data *acc,
 			    int poll_interval_ms)
 {
 	int err = -1;

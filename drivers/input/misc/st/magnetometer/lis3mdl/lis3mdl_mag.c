@@ -731,7 +731,7 @@ static void lis3mdl_mag_report_values(struct lis3mdl_dev *dev, int *xyz)
 	input_sync(dev->input_dev_mag);
 }
 
-int lis3mdl_mag_input_init(struct lis3mdl_dev *dev)
+static int lis3mdl_mag_input_init(struct lis3mdl_dev *dev)
 {
 	int err;
 

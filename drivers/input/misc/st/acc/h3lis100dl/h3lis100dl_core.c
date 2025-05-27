@@ -239,7 +239,8 @@ static int h3lis100dl_device_power_on(struct h3lis100dl_data *acc)
 /*
  * hrtimer callback - it is called every polling_rate msec.
  */
-enum hrtimer_restart h3lis100dl_timer_func_queue_work(struct hrtimer *timer)
+static enum
+hrtimer_restart h3lis100dl_timer_func_queue_work(struct hrtimer *timer)
 {
 	struct h3lis100dl_data *acc;
 
@@ -253,7 +254,8 @@ enum hrtimer_restart h3lis100dl_timer_func_queue_work(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-int h3lis100dl_update_g_range(struct h3lis100dl_data *acc, u8 new_g_range)
+static int
+h3lis100dl_update_g_range(struct h3lis100dl_data *acc, u8 new_g_range)
 {
 	int err = -1;
 
@@ -297,8 +299,9 @@ error:
 	return err;
 }
 
-int h3lis100dl_update_odr(struct h3lis100dl_data *acc,
-			  int poll_interval_ms)
+static int
+h3lis100dl_update_odr(struct h3lis100dl_data *acc,
+		      int poll_interval_ms)
 {
 	int err = -1;
 	int i;

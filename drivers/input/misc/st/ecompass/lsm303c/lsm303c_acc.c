@@ -963,7 +963,8 @@ static void lsm303c_acc_input_poll_work_func(struct work_struct *work)
 					dev->polling_ktime, HRTIMER_MODE_REL);
 }
 
-enum hrtimer_restart lsm303c_acc_hr_timer_poll_function(struct hrtimer *timer)
+static enum
+hrtimer_restart lsm303c_acc_hr_timer_poll_function(struct hrtimer *timer)
 {
 	struct lsm303c_acc_dev *dev;
 

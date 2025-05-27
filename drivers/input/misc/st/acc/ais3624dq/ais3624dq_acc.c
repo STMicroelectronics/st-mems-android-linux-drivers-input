@@ -318,7 +318,7 @@ static void ais3624dq_acc_irq2_work_func(struct work_struct *work)
 	enable_irq(acc->irq2);
 }
 
-int ais3624dq_acc_update_g_range(struct ais3624dq_acc_data *acc, u8 new_g_range)
+static int ais3624dq_acc_update_g_range(struct ais3624dq_acc_data *acc, u8 new_g_range)
 {
 	int err = -1;
 	u8 sensitivity;
@@ -376,8 +376,8 @@ error:
 	return err;
 }
 
-int ais3624dq_acc_update_odr(struct ais3624dq_acc_data *acc,
-			     int poll_interval_ms)
+static int ais3624dq_acc_update_odr(struct ais3624dq_acc_data *acc,
+				    int poll_interval_ms)
 {
 	int err = -1;
 	int i;

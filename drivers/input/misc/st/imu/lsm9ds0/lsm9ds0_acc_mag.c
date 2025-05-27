@@ -2822,7 +2822,7 @@ static void poll_function_work_mag(struct work_struct *input_work_mag)
 	hrtimer_start(&dev->hr_timer_mag, dev->ktime_mag, HRTIMER_MODE_REL);
 }
 
-enum hrtimer_restart poll_function_read_acc(struct hrtimer *timer)
+static enum hrtimer_restart poll_function_read_acc(struct hrtimer *timer)
 {
 	struct lsm9ds0_dev *dev;
 
@@ -2834,7 +2834,7 @@ enum hrtimer_restart poll_function_read_acc(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-enum hrtimer_restart poll_function_read_mag(struct hrtimer *timer)
+static enum hrtimer_restart poll_function_read_mag(struct hrtimer *timer)
 {
 	struct lsm9ds0_dev *dev;
 

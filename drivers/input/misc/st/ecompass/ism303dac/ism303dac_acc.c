@@ -317,7 +317,7 @@ static void ism303dac_acc_poll_wk(struct work_struct *input_work)
 	}
 }
 
-u8 ism303dac_event_irq1_value(struct st_common_data *cdata)
+static u8 ism303dac_event_irq1_value(struct st_common_data *cdata)
 {
 	u8 value = 0x0;
 	priv_data_t *priv = GET_PDATA(cdata);
@@ -337,7 +337,7 @@ u8 ism303dac_event_irq1_value(struct st_common_data *cdata)
 	return value;
 }
 
-int st_ism303dac_update_drdy_irq(struct st_sensor_data *sdata)
+static int st_ism303dac_update_drdy_irq(struct st_sensor_data *sdata)
 {
 	u8 reg_addr, reg_val, reg_mask;
 	
@@ -365,7 +365,7 @@ int st_ism303dac_update_drdy_irq(struct st_sensor_data *sdata)
 	return st_ism303dac_sensor_write_data(sdata->cdata, reg_addr, reg_mask, reg_val);
 }
 
-int ism303dac_set_fs(struct st_sensor_data *sdata, unsigned int fs)
+static int ism303dac_set_fs(struct st_sensor_data *sdata, unsigned int fs)
 {
 	int err, i;
 	u8 pmode = GET_PDATA(sdata->cdata)->power_mode;
@@ -389,7 +389,7 @@ int ism303dac_set_fs(struct st_sensor_data *sdata, unsigned int fs)
 	return 0;
 }
 
-void ism303dac_event_management(struct st_common_data *cdata, u8 int_reg_val)
+static void ism303dac_event_management(struct st_common_data *cdata, u8 int_reg_val)
 {
 	priv_data_t *priv = GET_PDATA(cdata);
 
@@ -418,7 +418,7 @@ void ism303dac_event_management(struct st_common_data *cdata, u8 int_reg_val)
 	}
 }
 
-void ism303dac_irq_management(struct work_struct *irq_work)
+static void ism303dac_irq_management(struct work_struct *irq_work)
 {
 	priv_data_t *priv;
 	u8 status[4];
@@ -438,7 +438,7 @@ void ism303dac_irq_management(struct work_struct *irq_work)
 	return;
 }
 
-int ism303dac_acc_write_odr(struct st_sensor_data *sdata) {
+static int ism303dac_acc_write_odr(struct st_sensor_data *sdata) {
 	int err, i;
 	u32 max_odr = 0;
 	priv_data_t *priv = GET_PDATA(sdata->cdata);
@@ -471,7 +471,8 @@ int ism303dac_acc_write_odr(struct st_sensor_data *sdata) {
 	return 0;
 }
 
-int ism303dac_configure_tap_event(struct st_sensor_data *sdata, bool single_tap)
+static int __maybe_unused
+ism303dac_configure_tap_event(struct st_sensor_data *sdata, bool single_tap)
 {
 	u8 err = 0;
 
@@ -508,7 +509,7 @@ int ism303dac_configure_tap_event(struct st_sensor_data *sdata, bool single_tap)
 	return err;
 }
 
-int st_ism303dac_set_enable(struct st_sensor_data *sdata, bool state)
+static int st_ism303dac_set_enable(struct st_sensor_data *sdata, bool state)
 {
 	int err = 0;
 	priv_data_t *priv = GET_PDATA(sdata->cdata);
@@ -579,17 +580,17 @@ enable_sensor_error:
 	return err;
 }
 
-int ism303dac_acc_enable_sensors(struct st_sensor_data *sdata)
+static int ism303dac_acc_enable_sensors(struct st_sensor_data *sdata)
 {
 	return st_ism303dac_set_enable(sdata, true);
 }
 
-int ism303dac_acc_disable_sensors(struct st_sensor_data *sdata)
+static int ism303dac_acc_disable_sensors(struct st_sensor_data *sdata)
 {
 	return st_ism303dac_set_enable(sdata, false);
 }
 
-ssize_t ism303dac_acc_get_scale_avail(struct device *dev,
+static ssize_t ism303dac_acc_get_scale_avail(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	int i, len = 0;
@@ -603,7 +604,7 @@ ssize_t ism303dac_acc_get_scale_avail(struct device *dev,
 	return len;
 }
 
-ssize_t ism303dac_acc_get_cur_scale(struct device *dev,
+static ssize_t ism303dac_acc_get_cur_scale(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	int i;
@@ -618,7 +619,7 @@ ssize_t ism303dac_acc_get_cur_scale(struct device *dev,
 	return sprintf(buf, "%d\n", ism303dac_fs_table.fs_avl[i].urv);
 }
 
-ssize_t ism303dac_acc_set_cur_scale(struct device *dev, struct device_attribute *attr,
+static ssize_t ism303dac_acc_set_cur_scale(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
 	int urv, err;
@@ -674,7 +675,7 @@ static ssize_t ism303dac_acc_set_resolution_mode(struct device *dev,
 	return count;
 }
 
-int ism303dac_init_sensors(struct st_common_data *cdata)
+static int ism303dac_init_sensors(struct st_common_data *cdata)
 {
 	int err, i;
 	struct st_sensor_data *sdata;
@@ -794,7 +795,7 @@ static irqreturn_t ism303dac_save_tstamp(int irq, void *private)
 	return IRQ_HANDLED;
 }
 
-int ism303dac_allocate_workqueue(struct st_common_data *cdata)
+static int ism303dac_allocate_workqueue(struct st_common_data *cdata)
 {
 	int err;
 
@@ -890,7 +891,7 @@ static const struct attribute_group ism303dac_attribute_groups[] = {
 	},
 };
 
-int ism303dac_sensors_data_init(struct st_common_data *cdata)
+static int ism303dac_sensors_data_init(struct st_common_data *cdata)
 {
 	int32_t i;
 	bool is_3_axis;

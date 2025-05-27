@@ -1015,7 +1015,8 @@ static void lis2hh12_acc_input_poll_work_func(struct work_struct *work)
 	lis2hh12_acc_report_triple(stat);
 }
 
-enum hrtimer_restart lis2hh12_acc_hr_timer_poll_function(struct hrtimer *timer)
+static enum
+hrtimer_restart lis2hh12_acc_hr_timer_poll_function(struct hrtimer *timer)
 {
 	struct lis2hh12_status *stat;
 

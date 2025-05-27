@@ -1294,14 +1294,14 @@ static int32_t lsm6ds0_gyr_enable(struct lsm6ds0_status *stat)
 }
 
 #ifdef LSM6DS0_EN_ON_OPEN
-int32_t lsm6ds0_acc_input_open(struct input_dev *input)
+static int32_t lsm6ds0_acc_input_open(struct input_dev *input)
 {
 	struct lsm6ds0_status *stat = input_get_drvdata(input);
 
 	return lsm6ds0_acc_enable(stat);
 }
 
-void lsm6ds0_acc_input_close(struct input_dev *dev)
+static void lsm6ds0_acc_input_close(struct input_dev *dev)
 {
 	struct lsm6ds0_status *stat = input_get_drvdata(dev);
 
@@ -1309,14 +1309,14 @@ void lsm6ds0_acc_input_close(struct input_dev *dev)
 }
 #endif
 
-int32_t lsm6ds0_gyr_input_open(struct input_dev *input)
+static int32_t __maybe_unused lsm6ds0_gyr_input_open(struct input_dev *input)
 {
 	struct lsm6ds0_status *stat = input_get_drvdata(input);
 
 	return lsm6ds0_gyr_enable(stat);
 }
 
-void lsm6ds0_gyr_input_close(struct input_dev *dev)
+static void __maybe_unused lsm6ds0_gyr_input_close(struct input_dev *dev)
 {
 	struct lsm6ds0_status *stat = input_get_drvdata(dev);
 

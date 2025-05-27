@@ -88,7 +88,7 @@ static void ism303dac_mag_poll_wk(struct work_struct *input_work)
 	}
 }
 
-int ism303dac_mag_write_odr(struct st_sensor_data *sdata) {
+static int ism303dac_mag_write_odr(struct st_sensor_data *sdata) {
 	int i;
 
 	for (i = 0; i < ISM303DAC_MAG_ODR_LIST_NUM; i++) {
@@ -104,7 +104,7 @@ int ism303dac_mag_write_odr(struct st_sensor_data *sdata) {
 				ism303dac_mag_odr_table_t[i].value);
 }
 
-int ism303dac_mag_enable_sensors(struct st_sensor_data *sdata)
+static int ism303dac_mag_enable_sensors(struct st_sensor_data *sdata)
 {
 	int err;
 
@@ -123,7 +123,7 @@ int ism303dac_mag_enable_sensors(struct st_sensor_data *sdata)
 	return 0;
 }
 
-int ism303dac_mag_disable_sensor(struct st_sensor_data *sdata)
+static int ism303dac_mag_disable_sensor(struct st_sensor_data *sdata)
 {
 	int err;
 
@@ -143,13 +143,13 @@ int ism303dac_mag_disable_sensor(struct st_sensor_data *sdata)
 	return 0;
 }
 
-ssize_t ism303dac_mag_get_scale_avail(struct device *dev,
+static ssize_t ism303dac_mag_get_scale_avail(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	return sprintf(buf, "50\n");
 }
 
-int ism303dac_mag_init_sensor(struct st_common_data *cdata)
+static int ism303dac_mag_init_sensor(struct st_common_data *cdata)
 {
 	int err;
 	struct st_sensor_data *sdata = cdata->sensors;
@@ -201,7 +201,7 @@ static const struct attribute_group ism303dac_mag_attribute_groups = {
 	.name = ISM303DAC_MAG_DEV_NAME,
 };
 
-int ism303dac_mag_data_init(struct st_common_data *cdata)
+static int ism303dac_mag_data_init(struct st_common_data *cdata)
 {
 	struct st_sensor_data *sdata = cdata->sensors;
 

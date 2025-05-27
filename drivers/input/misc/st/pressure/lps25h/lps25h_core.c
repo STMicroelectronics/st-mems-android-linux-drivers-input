@@ -312,7 +312,8 @@ static int lps25h_prs_device_power_on(struct lps25h_prs_data *stat)
 	return 0;
 }
 
-int lps25h_prs_update_odr(struct lps25h_prs_data *stat, int poll_period_ms)
+static int
+lps25h_prs_update_odr(struct lps25h_prs_data *stat, int poll_period_ms)
 {
 	int err = -1;
 	int i;
@@ -858,14 +859,14 @@ static void lps25h_prs_input_work_func(struct work_struct *work)
 	mutex_unlock(&stat->lock);
 }
 
-int lps25h_prs_input_open(struct input_dev *input)
+static int lps25h_prs_input_open(struct input_dev *input)
 {
 	struct lps25h_prs_data *stat = input_get_drvdata(input);
 
 	return lps25h_prs_enable(stat);
 }
 
-void lps25h_prs_input_close(struct input_dev *dev)
+static void lps25h_prs_input_close(struct input_dev *dev)
 {
 	lps25h_prs_disable(input_get_drvdata(dev));
 }

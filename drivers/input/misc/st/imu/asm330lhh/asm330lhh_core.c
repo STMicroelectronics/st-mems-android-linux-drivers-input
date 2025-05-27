@@ -454,7 +454,7 @@ static int asm330lhh_set_fs(struct asm330lhh_sensor_data *sdata, u32 gain)
 }
 
 #ifdef CONFIG_ASM330LHH_IRQ_THREAD
-irqreturn_t asm330lhh_save_timestamp(int irq, void *private)
+static irqreturn_t asm330lhh_save_timestamp(int irq, void *private)
 {
 	struct asm330lhh_data *cdata = (struct asm330lhh_data *)private;
 
@@ -540,7 +540,8 @@ static int asm330lhh_allocate_threaded_irq(struct asm330lhh_data *cdata)
 	return err;
 }
 
-int asm330lhh_set_drdy_irq(struct asm330lhh_sensor_data *sdata, bool state)
+static int
+asm330lhh_set_drdy_irq(struct asm330lhh_sensor_data *sdata, bool state)
 {
 	u8 reg_addr = 0, mask = 0, value;
 

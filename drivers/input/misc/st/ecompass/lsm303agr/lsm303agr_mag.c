@@ -89,7 +89,7 @@ static int lsm303agr_mag_write_data_with_mask(struct lsm303agr_common_data *cdat
 	return cdata->tf->write(cdata->dev, reg_addr, 1, &new_data);
 }
 
-int lsm303agr_mag_input_init(struct lsm303agr_sensor_data *sdata,
+static int lsm303agr_mag_input_init(struct lsm303agr_sensor_data *sdata,
 			     const char* description)
 {
 	int err;

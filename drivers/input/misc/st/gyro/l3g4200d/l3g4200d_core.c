@@ -680,14 +680,14 @@ static enum hrtimer_restart l3g4200d_timer_poll(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-int l3g4200d_input_open(struct input_dev *input)
+static int l3g4200d_input_open(struct input_dev *input)
 {
 	struct l3g4200d_data *gyro = input_get_drvdata(input);
 
 	return l3g4200d_enable(gyro);
 }
 
-void l3g4200d_input_close(struct input_dev *dev)
+static void l3g4200d_input_close(struct input_dev *dev)
 {
 	struct l3g4200d_data *gyro = input_get_drvdata(dev);
 
