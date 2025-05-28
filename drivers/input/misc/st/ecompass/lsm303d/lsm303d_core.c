@@ -58,6 +58,7 @@ Revision 1-0-7 2014/08/04
 #include <linux/irq.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #if defined(CONFIG_OF)
 #include <linux/of.h>
@@ -2926,16 +2927,36 @@ static int32_t lsm303d_parse_dt(struct lsm303d_status *stat)
 
 	if (of_match_device(stat->dev->dev_id, dev)) {
 		dn = dev->of_node;
-		//stat->pdata_main->of_node = dn;
+		stat->pdata_main->of_node = dn;
 
+	/*
+	 * GPIO properties should be named "[<name>-]gpios", with <name> being
+	 * the purpose of this GPIO for the device. While a non-existent <name>
+	 * is considered valid for compatibility reasons (resolving to the
+	 * "gpios" property), it is not allowed for new bindings.
+	 * Also, GPIO properties named "[<name>-]gpio" are valid and old
+	 * bindings use it, but are only supported for compatibility reasons
+	 * and should not be used for newer bindings since it has been
+	 * deprecated.
+	 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 		stat->pdata_acc->gpio_int1 = of_get_gpio(dn, 0);
+#else
+		stat->pdata_acc->gpio_int1 =
+				of_get_named_gpio(dn, "intpin-gpios", 0);
+#endif	/* LINUX_VERSION_CODE */
 		if (!gpio_is_valid(stat->pdata_acc->gpio_int1)) {
 			dev_err(dev, "failed to get gpio_int1\n");
 
 			stat->pdata_acc->gpio_int1 = DEFAULT_INT1_GPIO;
 		}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 		stat->pdata_acc->gpio_int2 = of_get_gpio(dn, 1);
+#else
+		stat->pdata_acc->gpio_int2 =
+				of_get_named_gpio(dn, "intpin-gpios", 0);
+#endif	/* LINUX_VERSION_CODE */
 		if (!gpio_is_valid(stat->pdata_acc->gpio_int2)) {
 			dev_err(dev, "failed to get gpio_int2\n");
 

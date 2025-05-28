@@ -39,6 +39,7 @@
 #include <linux/irq.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -2114,13 +2115,34 @@ static int32_t lsm6ds0_parse_dt(struct lsm6ds0_status *stat,
 	mutex_lock(&stat->lock);
 	dn = dev->of_node;
 	stat->pdata_main->of_node = dn;
+
+	/*
+	 * GPIO properties should be named "[<name>-]gpios", with <name> being
+	 * the purpose of this GPIO for the device. While a non-existent <name>
+	 * is considered valid for compatibility reasons (resolving to the
+	 * "gpios" property), it is not allowed for new bindings.
+	 * Also, GPIO properties named "[<name>-]gpio" are valid and old
+	 * bindings use it, but are only supported for compatibility reasons
+	 * and should not be used for newer bindings since it has been
+	 * deprecated.
+	 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 	stat->pdata_main->gpio_int1 = of_get_gpio(dn, 0);
+#else
+	stat->pdata_main->gpio_int1 =
+				of_get_named_gpio(dn, "intpin-gpios", 0);
+#endif	/* LINUX_VERSION_CODE */
 	if (!gpio_is_valid(stat->pdata_main->gpio_int1)) {
 		dev_err(dev, "failed to get gpio_int1\n");
 			stat->pdata_main->gpio_int1 = LSM6DS0_INT1_GPIO_DEF;
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 	stat->pdata_main->gpio_int2 = of_get_gpio(dn, 1);
+#else
+	stat->pdata_main->gpio_int2 =
+				of_get_named_gpio(dn, "intpin-gpios", 0);
+#endif	/* LINUX_VERSION_CODE */
 	if (!gpio_is_valid(stat->pdata_main->gpio_int2)) {
 		dev_err(dev, "failed to get gpio_int2\n");
 			stat->pdata_main->gpio_int2 = LSM6DS0_INT2_GPIO_DEF;

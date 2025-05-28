@@ -40,6 +40,7 @@
 #include <linux/irq.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -969,8 +970,17 @@ static int lsm9ds1_mag_parse_dt(struct lsm9ds1_mag_dev *dev,
 	if (of_match_device(dev->mag_dt_id, device)) {
 		dn = device->of_node;
 		dev->pdata_mag->of_node = dn;
-		
+
+	/* This device currently do not use irq, hence following is just
+	 * a suggestion for getting gpio number from devicetree in case some
+	 * use wants to implement irq usage
+	 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 		dev->pdata_mag->gpio_int_m = of_get_gpio(dn, 0);
+#else
+		dev->pdata_mag->gpio_int_m =
+				of_get_named_gpio(dn, "intpin-gpios", 0);
+#endif	/* LINUX_VERSION_CODE */
 		if (!gpio_is_valid(dev->pdata_mag->gpio_int_m)) {
 			dev_err(dev->dev, "failed to get gpio_int_m\n");
 			dev->pdata_mag->gpio_int_m = LSM9DS1_INT_M_GPIO_DEF;
