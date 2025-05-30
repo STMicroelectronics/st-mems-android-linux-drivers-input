@@ -33,6 +33,9 @@ The repository currently contains drivers supporting the following Longterm Supp
 >    * 5.4
 >    * 5.10
 >    * 5.15
+>    * 6.1
+>    * 6.6
+>    * 6.12
 
 STM sensor drivers are located under the directory [drivers/input/misc/st](https://github.com/STMicroelectronics/st-mems-android-linux-drivers-input/tree/master/drivers/input/misc/st) organized in folders by sensor type:
 
@@ -49,8 +52,8 @@ STM sensor drivers are located under the directory [drivers/input/misc/st](https
 
 ### Accelerometer:
 
-> AIS328DQ, AIS3624DQ, H3LIS100DL, H3LIS331DL, LIS2DE, LIS2DE12,
-> LIS2DH, LIS2DH12, LIS2DS12, LIS2HH12, LIS331DLH, LIS331HH,
+> AIS2DW12, AIS2IH, AIS328DQ, AIS3624DQ, H3LIS100DL, H3LIS331DL, LIS2DE,
+> LIS2DE12, LIS2DH, LIS2DH12, LIS2DS12, LIS2HH12, LIS331DLH, LIS331HH,
 > LIS3DE, LIS3DH, LIS3DSH, LIS2DW12, LIS3DHH, IIS3DHHC, IIS2DH
 
 ### Gyroscope:
@@ -201,6 +204,8 @@ In order to explain how to integrate STM sensors in a different kernel, please c
 
 ### Device Tree configuration
 
+> Documentation Device Tree Bindings are published under: Documentation/devicetree/bindings/input
+
 > To enable driver probing, add the lsm6dsm node to the platform device tree as described below.
 
 > **Required properties:**
@@ -259,12 +264,14 @@ More Information
 
 [https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/spi](https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/spi)
 
-[https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bings/interrupt-controller/interrupts.txt](https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt)
+[https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt](https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt)
+
+[https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/gpio/gpio.txt](https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/gpio/gpio.txt)
 
 
 Copyright
 ===========
-Copyright (C) 2022 STMicroelectronics
+Copyright (C) 2022, 2025 STMicroelectronics
 
 This software is distributed under the GNU General Public License - see the accompanying COPYING file for more details.
 
@@ -273,3 +280,4 @@ This software is distributed under the GNU General Public License - see the acco
 [3]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/i2c "I2C"
 [4]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/spi "SPI"
 [5]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/interrupt-controller/interrupts.txt "interrupts"
+[6]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/gpio/gpio.txt "gpio"
