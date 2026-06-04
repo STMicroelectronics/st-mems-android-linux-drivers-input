@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /******************** (C) COPYRIGHT 2013 STMicroelectronics *******************
 *
 * File Name          : lsm303d.c

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_LPS22HH
 	tristate "STMicroelectronics LPS22HH/LPS22CH/LPS27HHW/LPS27HHTW sensor"
 	depends on (I2C || SPI) && SYSFS

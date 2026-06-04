@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_ASM330LHH
 	tristate "STMicroelectronics ASM330LHH sensor"
 	depends on (I2C || SPI) && SYSFS

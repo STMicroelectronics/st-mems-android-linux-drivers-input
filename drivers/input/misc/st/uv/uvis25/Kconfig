@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_UVIS25
 	tristate "STMicroelectronics UVIS25 sensor"
 	depends on (I2C || SPI) && SYSFS

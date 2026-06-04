@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 
 config INPUT_L3GD20H
          tristate "STMicroelectronics L3GD20H sensor"

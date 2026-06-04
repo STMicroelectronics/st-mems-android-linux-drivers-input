@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_LIS2DE
 	tristate "STMicroelectronics LIS2DE/LIS2DE12 sensor"
 	depends on (I2C || SPI) && SYSFS

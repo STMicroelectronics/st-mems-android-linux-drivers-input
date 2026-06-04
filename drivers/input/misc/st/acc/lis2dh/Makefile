@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 #
 # Makefile for the input misc STM acc lis2dh/iis2dh driver
 #

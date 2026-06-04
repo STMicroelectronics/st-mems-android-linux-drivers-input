@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 #
 # Makefile for the input misc lps33hw and lps35hw driver.
 #

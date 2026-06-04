@@ -1,13 +1,14 @@
- /*
-  * STMicroelectronics h3lis100dl Accelerometer driver
-  * Based on lis331dlh input driver
-  *
-  * Copyright 2016 STMicroelectronics Inc.
-  *
-  * Armando Visconti <armando.visconti@st.com>
-  *
-  * Licensed under the GPL-2.
-  */
+/* SPDX-License-Identifier: GPL-2.0-only */
+/*
+ * STMicroelectronics h3lis100dl Accelerometer driver
+ * Based on lis331dlh input driver
+ *
+ * Copyright 2016 STMicroelectronics Inc.
+ *
+ * Armando Visconti <armando.visconti@st.com>
+ *
+ * Licensed under the GPL-2.
+ */
 
 #ifndef __H3LIS100DL_H__
 #define __H3LIS100DL_H__

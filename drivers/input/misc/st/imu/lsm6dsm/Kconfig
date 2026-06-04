@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_LSM6DSM
 	tristate "STMicroelectronics LSM6DSM sensor"
 	depends on (I2C || SPI) && SYSFS

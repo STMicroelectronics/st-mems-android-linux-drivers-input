@@ -1,4 +1,4 @@
-
+/* SPDX-License-Identifier: GPL-2.0-only */
 /******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
 *
 * File Name          : lsm303dlhc_sysfs.h

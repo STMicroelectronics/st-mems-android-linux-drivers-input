@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_LPS25H
 	tristate "STMicroelectronics LPS25H sensor"
 	depends on (I2C || SPI) && SYSFS

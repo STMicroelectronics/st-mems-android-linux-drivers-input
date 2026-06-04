@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Makefile for the input misc STM drivers.
+#
 obj-$(CONFIG_INPUT_ECOMPASS) += ecompass/
 obj-$(CONFIG_INPUT_IMU) += imu/
 obj-$(CONFIG_INPUT_ACC) += acc/

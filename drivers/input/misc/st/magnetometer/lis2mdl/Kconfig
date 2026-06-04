@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_LIS2MDL
          tristate "STM LIS2MDL/IIS2MDC sensor"
          depends on (I2C || SPI) && SYSFS

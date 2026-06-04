@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 
 config INPUT_LPS22HB
 	tristate "STMicroelectronics LPS22HB/LPS22HD sensor"

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /******************** (C) COPYRIGHT 2012 STMicroelectronics ********************
 *
 * File Name		: l3gd20.h

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_STTS22H
          tristate "STM STTS22H sensor"
          depends on I2C && SYSFS

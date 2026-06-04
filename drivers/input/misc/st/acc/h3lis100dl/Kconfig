@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_H3LIS100DL
 	tristate "STMicroelectronics H3LIS100DL sensor"
 	depends on (I2C || SPI) && SYSFS

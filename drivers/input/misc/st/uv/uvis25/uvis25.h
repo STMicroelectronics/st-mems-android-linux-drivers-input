@@ -1,6 +1,7 @@
-/* 
+/* SPDX-License-Identifier: GPL-2.0-only */
+/*
  Copyright (C) 2016 STMicroelectronics
- 
+
  AMS - Motion Mems Division - Application Team
 
  Mario Tesi (mario.tesi@st.com)

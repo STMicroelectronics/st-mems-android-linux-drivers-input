@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /******************** (C) COPYRIGHT 2010 STMicroelectronics ********************
 *
 * File Name		: a3g4250d.h

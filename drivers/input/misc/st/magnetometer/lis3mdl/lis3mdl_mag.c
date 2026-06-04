@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
 *
 * File Name          : lis3mdl_mag.c

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /* Copyright (C) 2014 STMicroelectronics
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

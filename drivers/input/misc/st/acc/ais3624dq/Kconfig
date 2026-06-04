@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_AIS3624DQ
 	tristate "STMicroelectronics AIS3624DQ sensor"
 	depends on (I2C || SPI) && SYSFS

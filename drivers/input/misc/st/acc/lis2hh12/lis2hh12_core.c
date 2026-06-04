@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /******************** (C) COPYRIGHT 2013 STMicroelectronics ********************
  *
  * File Name          : lis2hh12_core.c

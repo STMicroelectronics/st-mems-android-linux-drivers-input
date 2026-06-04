@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /*
  * STMicroelectronics h3lis100dl Accelerometer driver
  * Based on lis331dlh input driver

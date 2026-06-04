@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_LIS3DSH
 	tristate "STMicroelectronics LIS3DSH sensor"
 	depends on (I2C || SPI) && SYSFS

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 
 config INPUT_LSM330DLC
 	tristate "STMicroelectronics LSM330DLC sensor"

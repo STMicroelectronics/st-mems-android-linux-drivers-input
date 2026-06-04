@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
 *
 * File Name	: lis2hh12_i2c.c

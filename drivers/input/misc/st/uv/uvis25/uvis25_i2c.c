@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
 *
 * File Name	: uvis25_i2c.c

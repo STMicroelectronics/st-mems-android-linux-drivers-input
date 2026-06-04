@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_ISM330DLC
 	tristate "STMicroelectronics ISM330DLC sensor"
 	depends on (I2C || SPI) && SYSFS

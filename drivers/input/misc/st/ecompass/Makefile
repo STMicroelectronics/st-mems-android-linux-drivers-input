@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Makefile for the input misc STM ecompass drivers.
+#
 obj-$(CONFIG_INPUT_LSM303AGR) += lsm303agr/
 obj-$(CONFIG_INPUT_LSM303AH) += lsm303ah/
 obj-$(CONFIG_INPUT_LSM303C) += lsm303c/

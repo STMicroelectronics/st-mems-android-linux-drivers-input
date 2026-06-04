@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 /******************** (C) COPYRIGHT 2010-2022 STMicroelectronics ********************
 *
 * File Name		: l3g4200d.h

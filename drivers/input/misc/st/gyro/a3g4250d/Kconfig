@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
 config INPUT_A3G4250D
 	tristate "STMicroelectronics A3G4250D sensor"
 	depends on (I2C || SPI) && SYSFS
