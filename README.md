@@ -12,12 +12,12 @@ __We strongly encourage and recommend that users upgrade to the suite of IIO dri
 
 The current repository supports the simpler and/or old designs for pure Linux. The designs for the latest Android versions are supposed to fail their Android CTS tests for sensors due to tightening requirements impacting high-speed data read and use of buffers/FIFO.
 
-Index
-=======
-	* Introduction
-	* Integration details
-	* More information
-	* Copyright
+# Table of Contents
+- [Introduction](#introduction)
+- [Integration details](#integration-details)
+- [More information](#more-information)
+- [License](#license)
+- [Copyright](#copyright)
 
 
 Introduction
@@ -89,6 +89,13 @@ All STM MEMS sensors support *I2C/SPI* digital interface. Please refer to [I2C][
 
 Integration details
 =====================
+
+> [!IMPORTANT]
+> **In-tree integration risk (merge/rebase with kernel source):**
+> This repository also contains top-level project files (for example [README.md](README.md) and [LICENSE.txt](LICENSE.txt)).
+> When integrating with the kernel tree using merge/rebase, a conflict on [README.md](README.md) may occur because some kernel trees already provide their own top-level `README.md`.
+> The operation may also introduce a new [LICENSE.txt](LICENSE.txt) file that refers to this ST project repository ONLY and IS NOT meant to be the full Linux kernel licensing files.
+> Please review and resolve accordingly these files explicitly during conflict resolution and merging rebase operations.
 
 ## Source code integration
 From your kernel source code root directory add the git remote (i.e. stmems_input_github) for this repository:
@@ -268,12 +275,16 @@ More Information
 
 [https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/gpio/gpio.txt](https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/gpio/gpio.txt)
 
+# License
+This software is distributed under the GNU General Public License v2.0
 
-Copyright
-===========
-Copyright (C) 2022, 2025 STMicroelectronics
+The project is released under GPLv2 to remain fully compatible with the Linux kernel licensing model and with in-tree kernel integration workflows. This choice also aligns the driver sources with the broader kernel driver ecosystem, where derivative works and redistributed binaries are expected to preserve source availability under the same copyleft terms.
 
-This software is distributed under the GNU General Public License - see the accompanying COPYING file for more details.
+Note: the repository [LICENSE.txt](LICENSE.txt) file is project-specific metadata for this ST driver package and is not a replacement for Linux kernel licensing documentation.
+
+# Copyright
+Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026 STMicroelectronics
+
 
 [1]: https://www.kernel.org/category/releases.html "Longterm Kernel releases"
 [2]: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/input "Input"
