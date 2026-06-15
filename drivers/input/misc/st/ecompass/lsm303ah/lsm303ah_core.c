@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lsm303ah_core.c driver
  *
- * Copyright 2015 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Giuseppe Barba <giuseppe.barba@st.com>
  *

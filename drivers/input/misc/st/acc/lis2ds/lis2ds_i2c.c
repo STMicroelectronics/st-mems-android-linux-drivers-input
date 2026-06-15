@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2015 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
 *
 * File Name          : lis2ds_i2c.c
 * Authors            : AMS - VMU - Application Team

@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lsm330dlc_acc_i2c.c driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Lorenzo Bianconi <lorenzo.bianconi@st.com>
  *

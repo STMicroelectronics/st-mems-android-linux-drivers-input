@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics l3gd20h_gyr_spi driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Lorenzo Bianconi <lorenzo.bianconi@st.com>
  *

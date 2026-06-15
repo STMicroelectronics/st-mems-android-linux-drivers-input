@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
  *
  * File Name          : lsm330dlc_acc.c
  * Authors            : MSH - Motion Mems BU - Application Team

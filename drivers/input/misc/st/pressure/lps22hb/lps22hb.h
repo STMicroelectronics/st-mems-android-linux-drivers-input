@@ -2,7 +2,7 @@
 /*
 * STMicroelectronics lps22hb driver
 *
-* Copyright 2016 STMicroelectronics Inc.
+* Copyright 2010-2026 STMicroelectronics Inc.
 *
 * Authors: HESA BU - Application Team
 *        : Adalberto Muhuho (adalberto.muhuho@st.com)

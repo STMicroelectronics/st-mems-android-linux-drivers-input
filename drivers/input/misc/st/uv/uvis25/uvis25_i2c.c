@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
 *
 * File Name	: uvis25_i2c.c
 * Authors	: AMS - Motion Mems Division - Application Team - Application Team

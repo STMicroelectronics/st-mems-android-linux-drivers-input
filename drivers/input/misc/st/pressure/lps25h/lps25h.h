@@ -4,7 +4,7 @@
 *
 * STMicroelectronics LPS25H Pressure / Temperature Sensor module driver
 *
-* Copyright (C) 2012 STMicroelectronics
+* Copyright (C) 2010-2026 STMicroelectronics
 * AMS - Motion Mems Division - Application Team
 * Matteo Dameno (matteo.dameno@st.com)
 * Mario Tesi (mario.tesi@st.com)

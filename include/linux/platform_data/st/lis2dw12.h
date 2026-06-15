@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lis2dw12 driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Giuseppe Barba <giuseppe.barba@st.com>
  *  V.1.0

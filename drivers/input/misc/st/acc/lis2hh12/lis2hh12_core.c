@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2013 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
  *
  * File Name          : lis2hh12_core.c
  * Authors            : AMS - Motion Mems Division - Application Team

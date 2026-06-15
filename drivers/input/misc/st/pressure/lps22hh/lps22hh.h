@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lps22hh driver
  *
- * Copyright 2020 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Authors: AMG MSD DIVISION
  *        : Mario Tesi (mario.tesi@st.com)

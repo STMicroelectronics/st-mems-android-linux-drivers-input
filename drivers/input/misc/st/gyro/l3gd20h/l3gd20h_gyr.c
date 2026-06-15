@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ********************
 *
 * File Name		: l3gd20h_gyr.c
 * Authors		: MEMS Motion Sensors Products Div- Application Team

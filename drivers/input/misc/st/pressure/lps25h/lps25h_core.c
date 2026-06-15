@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
-* Copyright (C) 2016 STMicroelectronics
+* Copyright (C) 2010-2026 STMicroelectronics
 *
 * AMS - Motion Mems Division - Application Team
 * Matteo Dameno (matteo.dameno@st.com)

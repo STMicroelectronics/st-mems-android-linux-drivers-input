@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics stts751_core driver
  *
- * Copyright 2020 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Licensed under the GPL-2.
  */

@@ -3,7 +3,7 @@
  * STMicroelectronics h3lis100dl Accelerometer driver
  * Based on lis331dlh input driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Armando Visconti <armando.visconti@st.com>
  *

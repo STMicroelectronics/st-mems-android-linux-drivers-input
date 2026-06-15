@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2016 STMicroelectronics *******************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
 *
 * File Name          : h3lis100dl_spi.c
 * Authors            : AMS - VMU - Application Team
@@ -10,7 +10,7 @@
 * Date               : 2016/Apr/26
 * Description        : h3lis100dl spi driver
 *
-*******************************************************************************
+********************************************************************************
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 2 as

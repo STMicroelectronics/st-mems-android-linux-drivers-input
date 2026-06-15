@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics ism330dlc i2c driver
  *
- * Copyright 2018 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Giuseppe Barba <giuseppe.barba@st.com>
  * Mario Tesi <mario.tesi@st.com>

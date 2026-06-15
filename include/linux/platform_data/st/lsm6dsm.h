@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lsm6dsm driver
  *
- * Copyright 2014 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Giuseppe Barba <giuseppe.barba@st.com>
  * v 1.2.2

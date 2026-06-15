@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lps22hb i2c driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Mario Tesi <mario.tesi@st.com>
  * v 1.2.2

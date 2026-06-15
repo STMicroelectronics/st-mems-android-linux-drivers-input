@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lsm6ds0 i2c driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Giuseppe Barba <giuseppe.barba@st.com>
  * Mario Tesi <mario.tesi@st.com>

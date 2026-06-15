@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics ism303dac_mag.c driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Giuseppe Barba <giuseppe.barba@st.com>
  * Lorenzo Bianconi <lorenzo.bianconi@st.com>

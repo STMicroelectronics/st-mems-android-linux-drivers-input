@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics asm330lhh driver
  *
- * Copyright 2019 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Mario Tesi <mario.tesi@st.com>
  * v 1.0

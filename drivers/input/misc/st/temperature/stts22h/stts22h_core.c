@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics stts22h_core.c driver
  *
- * Copyright 2022 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Authors: AMG MSD DIVISION
  *        : Mario Tesi (mario.tesi@st.com)

@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-/*
-********************* (C) COPYRIGHT 2012 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
 *
 * File Name          : lis3dsh.h
 * Authors            : MH - C&I BU - Application Team

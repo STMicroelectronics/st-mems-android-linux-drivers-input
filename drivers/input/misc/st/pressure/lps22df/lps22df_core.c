@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lps22df driver
  *
- * Copyright 2021 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Matteo Dameno <matteo.dameno@st.com>
  *

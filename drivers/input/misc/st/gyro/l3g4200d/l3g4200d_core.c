@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/******************** (C) COPYRIGHT 2016 STMicroelectronics ********************
+/******************** (C) COPYRIGHT 2010-2026 STMicroelectronics ***************
 *
 * File Name		: l3g4200d_gyr_sysfs.c
 * Authors		: MH - C&I BU - Application Team

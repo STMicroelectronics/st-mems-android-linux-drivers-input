@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lis2mdl.c driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Armando Visconti <armando.visconti@st.com>
  * Giuseppe Barba <giuseppe.barba@st.com>

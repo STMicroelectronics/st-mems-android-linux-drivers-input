@@ -2,7 +2,7 @@
 /*
  * STMicroelectronics lsm9ds0_acc_mag_spi driver
  *
- * Copyright 2016 STMicroelectronics Inc.
+ * Copyright 2010-2026 STMicroelectronics Inc.
  *
  * Lorenzo Bianconi <lorenzo.bianconi@st.com>
  *
