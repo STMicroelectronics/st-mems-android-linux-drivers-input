@@ -7,7 +7,6 @@
  * Copyright 2010-2026 STMicroelectronics Inc.
  */
 
-
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/i2c.h>
@@ -18,71 +17,98 @@
 
 #include "stm_input_ais2ih_core.h"
 
-static int ais2ih_input_i2c_read(struct ais2ih_input_data *cdata, u8 reg_addr,
-				 int len, u8 *data, bool b_lock)
+static int ais2ih_input_i2c_read(struct ais2ih_input_data *cdata,
+				 u8 reg_addr, int len,
+				 u8 *data, bool b_lock)
 {
-	int err = 0;
+	int err;
 	struct i2c_msg msg[2];
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
-	if (len > AIS2IH_I2C_MAX_BUFFER_SIZE) {
-		dev_err(cdata->dev, "I2C buffer size exceeded\n");
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > AIS2IH_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C read length: %d\n", len);
 		return -EINVAL;
 	}
 
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags;
 	msg[0].len = 1;
-	msg[0].buf = &reg_addr;
+	msg[0].buf = cdata->tb.tx_buf;
 
 	msg[1].addr = client->addr;
 	msg[1].flags = client->flags | I2C_M_RD;
 	msg[1].len = len;
-	msg[1].buf = data;
+	msg[1].buf = cdata->tb.rx_buf;
 
-	if (b_lock) {
+	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
-		err = i2c_transfer(client->adapter, msg, 2);
-		mutex_unlock(&cdata->bank_registers_lock);
-	} else {
-		err = i2c_transfer(client->adapter, msg, 2);
-	}
 
-	return err;
+	mutex_lock(&cdata->tb.buf_lock);
+
+	cdata->tb.tx_buf[0] = reg_addr;
+
+	err = i2c_transfer(client->adapter, msg, 2);
+	if (err == 2)
+		memcpy(data, cdata->tb.rx_buf, len);
+
+	mutex_unlock(&cdata->tb.buf_lock);
+
+	if (b_lock)
+		mutex_unlock(&cdata->bank_registers_lock);
+
+	if (err != 2)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
 static int ais2ih_input_i2c_write(struct ais2ih_input_data *cdata,
-				  u8 reg_addr, int len, u8 *data,
-				  bool b_lock)
+				  u8 reg_addr, int len,
+				  const u8 *data, bool b_lock)
 {
-	int err = 0;
-	u8 send[len + 1];
+	int err;
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
-	if (len > AIS2IH_I2C_MAX_BUFFER_SIZE) {
-		dev_err(cdata->dev, "I2C buffer size exceeded\n");
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
 		return -EINVAL;
 	}
 
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (len <= 0 || len >= AIS2IH_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
 	msg.addr = client->addr;
 	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	msg.len = len + 1;
+	msg.buf = cdata->tb.tx_buf;
 
-	if (b_lock) {
+	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
-		err = i2c_transfer(client->adapter, &msg, 1);
-		mutex_unlock(&cdata->bank_registers_lock);
-	} else {
-		err = i2c_transfer(client->adapter, &msg, 1);
-	}
 
-	return err;
+	mutex_lock(&cdata->tb.buf_lock);
+
+	cdata->tb.tx_buf[0] = reg_addr;
+	memcpy(&cdata->tb.tx_buf[1], data, len);
+
+	err = i2c_transfer(client->adapter, &msg, 1);
+
+	mutex_unlock(&cdata->tb.buf_lock);
+
+	if (b_lock)
+		mutex_unlock(&cdata->bank_registers_lock);
+
+	if (err != 1)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
 static const struct ais2ih_input_transfer_function ais2ih_input_tf_i2c = {
@@ -90,7 +116,7 @@ static const struct ais2ih_input_transfer_function ais2ih_input_tf_i2c = {
 	.read = ais2ih_input_i2c_read,
 };
 
-#if KERNEL_VERSION(6, 2, 0) <= LINUX_VERSION_CODE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
 static int ais2ih_input_i2c_probe(struct i2c_client *client)
 #else	/* LINUX_VERSION_CODE */
 static int ais2ih_input_i2c_probe(struct i2c_client *client,
@@ -117,7 +143,7 @@ static int ais2ih_input_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 static void ais2ih_input_i2c_remove(struct i2c_client *client)
 {
 	struct ais2ih_input_data *cdata = i2c_get_clientdata(client);
@@ -133,7 +159,7 @@ static int ais2ih_input_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
-#endif
+#endif /* LINUX_VERSION_CODE */
 
 #if IS_ENABLED(CONFIG_PM_SLEEP)
 static int ais2ih_input_suspend(struct device *dev)
@@ -160,7 +186,6 @@ static SIMPLE_DEV_PM_OPS(ais2ih_input_pm_ops, ais2ih_input_suspend,
 #define AIS2IH_PM_OPS	NULL
 #endif	/* CONFIG_PM_SLEEP */
 
-
 static const struct i2c_device_id ais2ih_input_ids[] = {
 	{AIS2IH_DEV_NAME, 0},
 	{}
@@ -173,7 +198,7 @@ static const struct of_device_id ais2ih_input_id_table[] = {
 	{},
 };
 MODULE_DEVICE_TABLE(of, ais2ih_input_id_table);
-#endif
+#endif	/* CONFIG_OF */
 
 static struct i2c_driver ais2ih_input_i2c_driver = {
 	.driver = {

@@ -17,7 +17,7 @@
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
 
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
@@ -341,16 +341,24 @@ ais2ih_input_write_data_with_mask(struct ais2ih_input_data *cdata,
 	int err;
 	u8 new_data = 0x00, old_data = 0x00;
 
+	mutex_lock(&cdata->rw_register_lock);
 	err = cdata->tf->read(cdata, reg_addr, 1, &old_data, b_lock);
 	if (err < 0)
-		return err;
+		goto unlock_on_uncomplete;
 
 	new_data = ((old_data & (~mask)) | ((data << __ffs(mask)) & mask));
 
-	if (new_data == old_data)
-		return 1;
+	if (new_data == old_data) {
+		err = 0;
+		goto unlock_on_uncomplete;
+	}
 
-	return cdata->tf->write(cdata, reg_addr, 1, &new_data, b_lock);
+	err = cdata->tf->write(cdata, reg_addr, 1, &new_data, b_lock);
+
+unlock_on_uncomplete:
+	mutex_unlock(&cdata->rw_register_lock);
+
+	return err;
 }
 
 static int ais2ih_input_input_init(struct ais2ih_input_sensor_data *sdata,
@@ -487,7 +495,7 @@ ais2ih_input_update_drdy_irq(struct ais2ih_input_sensor_data *sdata)
 	return ais2ih_input_write_data_with_mask(sdata->cdata, reg_addr,
 						 reg_mask,
 						 reg_val >> __ffs(reg_mask),
-						 true);
+						 false);
 }
 
 static int
@@ -507,7 +515,7 @@ ais2ih_input_set_fs(struct ais2ih_input_sensor_data *sdata, unsigned int fs)
 						ais2ih_input_fs_table.addr,
 						ais2ih_input_fs_table.mask,
 						ais2ih_input_fs_table.fs_avl[i].value,
-						true);
+						false);
 	if (err < 0)
 		return err;
 
@@ -589,10 +597,16 @@ hrtimer_restart ais2ih_input_hrtimer_acc_callback(struct hrtimer *timer)
 /* Events data */
 static irqreturn_t ais2ih_input_thread_fn(int irq, void *private)
 {
-	u8 status;
 	struct ais2ih_input_data *cdata = private;
+	u8 status;
+	int err;
 
-	cdata->tf->read(cdata, AIS2IH_STATUS_ADDR, 1, &status, true);
+	err = cdata->tf->read(cdata, AIS2IH_STATUS_ADDR, 1, &status, true);
+	if (err < 0) {
+		dev_err_ratelimited(cdata->dev,
+				    "failed to read interrupt status: %d\n", err);
+		return IRQ_HANDLED;
+	}
 
 	if (status & AIS2IH_EVENT_MASK) {
 		if ((cdata->sensors[AIS2IH_TAP].enabled) &&
@@ -659,7 +673,7 @@ static int ais2ih_input_update_hw_odr(struct ais2ih_input_sensor_data *sdata,
 					  AIS2IH_CTRL1_ADDR,
 					  AIS2IH_ODR_MASK,
 					  ais2ih_input_odr_table.odr_avl[cdata->power_mode][i].value,
-					  true);
+					  false);
 	if (err < 0)
 		return err;
 
@@ -673,21 +687,21 @@ static int
 ais2ih_input_configure_tap_event(struct ais2ih_input_sensor_data *sdata,
 				 bool single_tap)
 {
-	u8 err = 0;
+	int err;
 
 	if (single_tap) {
 		err = ais2ih_input_write_data_with_mask(sdata->cdata,
 						AIS2IH_INT_DUR_ADDR,
 						AIS2IH_INT_DUR_MASK,
 						AIS2IH_INT_DUR_STAP_DEFAULT,
-						true);
+						false);
 		if (err < 0)
 			return err;
 
 		err = ais2ih_input_write_data_with_mask(sdata->cdata,
 						AIS2IH_WAKE_UP_THS_ADDR,
 						AIS2IH_WAKE_UP_THS_S_D_TAP_MASK,
-						AIS2IH_DIS_BIT, true);
+						AIS2IH_DIS_BIT, false);
 		if (err < 0)
 			return err;
 	} else {
@@ -695,14 +709,14 @@ ais2ih_input_configure_tap_event(struct ais2ih_input_sensor_data *sdata,
 						AIS2IH_INT_DUR_ADDR,
 						AIS2IH_INT_DUR_MASK,
 						AIS2IH_INT_DUR_DTAP_DEFAULT,
-						true);
+						false);
 		if (err < 0)
 			return err;
 
 		err = ais2ih_input_write_data_with_mask(sdata->cdata,
 						AIS2IH_WAKE_UP_THS_ADDR,
 						AIS2IH_WAKE_UP_THS_S_D_TAP_MASK,
-						AIS2IH_EN_BIT, true);
+						AIS2IH_EN_BIT, false);
 		if (err < 0)
 			return err;
 	}
@@ -739,7 +753,7 @@ _ais2ih_input_enable_sensors(struct ais2ih_input_sensor_data *sdata)
 						AIS2IH_CTRL1_ADDR,
 						AIS2IH_ODR_MASK,
 						ais2ih_input_odr_table.odr_avl[cdata->power_mode][i].value,
-						true);
+						false);
 		if (err < 0)
 			return err;
 
@@ -747,7 +761,7 @@ _ais2ih_input_enable_sensors(struct ais2ih_input_sensor_data *sdata)
 						AIS2IH_CTRL1_ADDR,
 						AIS2IH_PWR_OPER_MODE_MASK,
 						cdata->power_mode,
-						true);
+						false);
 		if (err < 0)
 			return err;
 
@@ -801,7 +815,7 @@ _ais2ih_input_disable_sensors(struct ais2ih_input_sensor_data *sdata)
 					AIS2IH_CTRL1_ADDR,
 					AIS2IH_ODR_MASK,
 					ais2ih_input_odr_table.odr_avl[sdata->cdata->power_mode][0].value,
-					true);
+					false);
 		if (err < 0)
 			return err;
 
@@ -905,7 +919,7 @@ static int ais2ih_input_init_sensors(struct ais2ih_input_data *cdata)
 	err = ais2ih_input_write_data_with_mask(cdata,
 					  AIS2IH_CTRL2_ADDR,
 					  AIS2IH_SOFT_RESET_MASK,
-					  AIS2IH_EN_BIT, true);
+					  AIS2IH_EN_BIT, false);
 	if (err < 0)
 		return err;
 
@@ -915,56 +929,56 @@ static int ais2ih_input_init_sensors(struct ais2ih_input_data *cdata)
 	err = ais2ih_input_write_data_with_mask(cdata,
 					  AIS2IH_CTRL1_ADDR,
 					  AIS2IH_LP_MODE_MASK,
-					  AIS2IH_EN_LP_MODE_02, true);
+					  AIS2IH_EN_LP_MODE_02, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(cdata,
 					  AIS2IH_CTRL3_ADDR,
 					  AIS2IH_LIR_MASK,
-					  AIS2IH_EN_BIT, true);
+					  AIS2IH_EN_BIT, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(cdata,
 					  AIS2IH_CTRL2_ADDR,
 					  AIS2IH_BDU_MASK,
-					  AIS2IH_EN_BIT, true);
+					  AIS2IH_EN_BIT, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(sdata->cdata,
 					  AIS2IH_FREE_FALL_ADDR,
 					  AIS2IH_FREE_FALL_THS_MASK,
-					  AIS2IH_FREE_FALL_THS_DEFAULT, true);
+					  AIS2IH_FREE_FALL_THS_DEFAULT, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(sdata->cdata,
 					  AIS2IH_FREE_FALL_ADDR,
 					  AIS2IH_FREE_FALL_DUR_MASK,
-					  AIS2IH_FREE_FALL_DUR_DEFAULT, true);
+					  AIS2IH_FREE_FALL_DUR_DEFAULT, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(sdata->cdata,
 					  AIS2IH_TAP_THS_Z_ADDR,
 					  AIS2IH_TAP_AXIS_MASK,
-					  AIS2IH_TAP_AXIS_ENABLE_ALL, true);
+					  AIS2IH_TAP_AXIS_ENABLE_ALL, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(sdata->cdata,
 					  AIS2IH_TAP_THS_X_ADDR,
 					  AIS2IH_TAP_THS_MASK,
-					  AIS2IH_TAP_THS_DEFAULT, true);
+					  AIS2IH_TAP_THS_DEFAULT, false);
 	if (err < 0)
 		return err;
 
 	err = ais2ih_input_write_data_with_mask(sdata->cdata,
 					  AIS2IH_WAKE_UP_THS_ADDR,
 					  AIS2IH_WAKE_UP_THS_WU_MASK,
-					  AIS2IH_WAKE_UP_THS_WU_DEFAULT, true);
+					  AIS2IH_WAKE_UP_THS_WU_DEFAULT, false);
 	if (err < 0)
 		return err;
 
@@ -1255,6 +1269,7 @@ int ais2ih_input_common_probe(struct ais2ih_input_data *cdata, int irq,
 	u8 wai = 0;
 	struct ais2ih_input_sensor_data *sdata;
 
+	mutex_init(&cdata->rw_register_lock);
 	mutex_init(&cdata->bank_registers_lock);
 	mutex_init(&cdata->tb.buf_lock);
 

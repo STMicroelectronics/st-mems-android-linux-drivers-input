@@ -58,8 +58,9 @@ enum {
 #define INPUT_EVENT_TIME_MSB	MSC_SCAN
 #define INPUT_EVENT_TIME_LSB	MSC_MAX
 
-#define LIS2DW12_RX_MAX_LENGTH	16
-#define LIS2DW12_TX_MAX_LENGTH	16
+#define LIS2DW12_MAX_PAYLOAD_LENGTH	32
+#define LIS2DW12_RX_MAX_LENGTH		LIS2DW12_MAX_PAYLOAD_LENGTH
+#define LIS2DW12_TX_MAX_LENGTH		(LIS2DW12_MAX_PAYLOAD_LENGTH + 1)
 
 #define to_dev(obj) container_of(obj, struct device, kobj)
 
@@ -83,10 +84,10 @@ struct lis2dw12_transfer_buffer {
 struct lis2dw12_data;
 
 struct lis2dw12_transfer_function {
-	int (*write)(struct lis2dw12_data *cdata, u8 reg_addr,
-		     int len, u8 *data, bool b_lock);
-	int (*read)(struct lis2dw12_data *cdata, u8 reg_addr, int len, u8 *data,
-		    bool b_lock);
+	int (*write)(struct lis2dw12_data *cdata, u8 reg_addr, int len,
+		     const u8 *data, bool b_lock);
+	int (*read)(struct lis2dw12_data *cdata, u8 reg_addr, int len,
+		    u8 *data, bool b_lock);
 };
 
 struct lis2dw12_sensor_data {
@@ -114,6 +115,7 @@ struct lis2dw12_data {
 	struct device *dev;
 	struct lis2dw12_sensor_data sensors[LIS2DW12_SENSORS_NUMB];
 	struct workqueue_struct *workqueue;
+	struct mutex rw_register_lock;
 	struct mutex bank_registers_lock;
 	const struct lis2dw12_transfer_function *tf;
 	struct lis2dw12_transfer_buffer tb;
@@ -122,7 +124,7 @@ struct lis2dw12_data {
 int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype);
 void lis2dw12_common_remove(struct lis2dw12_data *cdata, int irq);
 
-#ifdef CONFIG_PM_SLEEP
+#if IS_ENABLED(CONFIG_PM_SLEEP)
 int lis2dw12_common_suspend(struct lis2dw12_data *cdata);
 int lis2dw12_common_resume(struct lis2dw12_data *cdata);
 #endif /* CONFIG_PM_SLEEP */

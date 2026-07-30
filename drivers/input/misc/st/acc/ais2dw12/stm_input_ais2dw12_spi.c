@@ -6,6 +6,7 @@
  *
  * Copyright 2010-2026 STMicroelectronics Inc.
  */
+
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/spi/spi.h>
@@ -22,28 +23,30 @@ static int ais2dw12_input_spi_read(struct ais2dw12_input_data *cdata,
 {
 	int err;
 	struct spi_message msg;
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = cdata->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = cdata->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	struct spi_transfer xfers[2] = { };
 
-	if (len >= AIS2DW12_RX_MAX_LENGTH) {
-		dev_err(cdata->dev, "SPI read len size exceeded:%d\n", len);
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI read: NULL data buffer\n");
 		return -EINVAL;
 	}
+
+	if (len <= 0 || len > AIS2DW12_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = cdata->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+	xfers[1].rx_buf = cdata->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
 
 	mutex_lock(&cdata->tb.buf_lock);
+
 	cdata->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ;
 
 	spi_message_init(&msg);
@@ -51,18 +54,11 @@ static int ais2dw12_input_spi_read(struct ais2dw12_input_data *cdata,
 	spi_message_add_tail(&xfers[1], &msg);
 
 	err = spi_sync(to_spi_device(cdata->dev), &msg);
-	if (err)
-		goto acc_spi_read_error;
+	if (!err)
+		memcpy(data, cdata->tb.rx_buf, len);
 
-	memcpy(data, cdata->tb.rx_buf, len * sizeof(u8));
 	mutex_unlock(&cdata->tb.buf_lock);
-	if (b_lock)
-		mutex_unlock(&cdata->bank_registers_lock);
 
-	return len;
-
-acc_spi_read_error:
-	mutex_unlock(&cdata->tb.buf_lock);
 	if (b_lock)
 		mutex_unlock(&cdata->bank_registers_lock);
 
@@ -70,28 +66,33 @@ acc_spi_read_error:
 }
 
 static int ais2dw12_input_spi_write(struct ais2dw12_input_data *cdata,
-				    u8 reg_addr, int len, u8 *data,
-				    bool b_lock)
+				    u8 reg_addr, int len,
+				    const u8 *data, bool b_lock)
 {
-	if (len >= AIS2DW12_TX_MAX_LENGTH) {
-		dev_err(cdata->dev, "SPI write len size exceeded:%d\n", len);
+	int err;
+	struct spi_message msg;
+	struct spi_transfer xfers = { };
+
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI write: NULL data buffer\n");
 		return -EINVAL;
 	}
 
-	int err;
-	struct spi_message msg;
-	struct spi_transfer xfers = {
-		.tx_buf = cdata->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	if (len <= 0 || len >= AIS2DW12_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = cdata->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
 
 	mutex_lock(&cdata->tb.buf_lock);
-	cdata->tb.tx_buf[0] = reg_addr;
 
+	cdata->tb.tx_buf[0] = reg_addr;
 	memcpy(&cdata->tb.tx_buf[1], data, len);
 
 	spi_message_init(&msg);
@@ -99,6 +100,7 @@ static int ais2dw12_input_spi_write(struct ais2dw12_input_data *cdata,
 	err = spi_sync(to_spi_device(cdata->dev), &msg);
 
 	mutex_unlock(&cdata->tb.buf_lock);
+
 	if (b_lock)
 		mutex_unlock(&cdata->bank_registers_lock);
 
@@ -135,7 +137,7 @@ static int ais2dw12_input_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
 static void ais2dw12_input_spi_remove(struct spi_device *spi)
 {
 	struct ais2dw12_input_data *cdata = spi_get_drvdata(spi);

@@ -41,23 +41,30 @@ static int lis2dw12_spi_read(struct lis2dw12_data *cdata, u8 reg_addr, int len,
 {
 	int err;
 	struct spi_message msg;
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = cdata->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = cdata->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	struct spi_transfer xfers[2] = { };
+
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LIS2DW12_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = cdata->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+	xfers[1].rx_buf = cdata->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
 
 	mutex_lock(&cdata->tb.buf_lock);
+
 	cdata->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ;
 
 	spi_message_init(&msg);
@@ -65,44 +72,45 @@ static int lis2dw12_spi_read(struct lis2dw12_data *cdata, u8 reg_addr, int len,
 	spi_message_add_tail(&xfers[1], &msg);
 
 	err = spi_sync(to_spi_device(cdata->dev), &msg);
-	if (err)
-		goto acc_spi_read_error;
+	if (!err)
+		memcpy(data, cdata->tb.rx_buf, len);
 
-	memcpy(data, cdata->tb.rx_buf, len*sizeof(u8));
 	mutex_unlock(&cdata->tb.buf_lock);
-	if (b_lock)
-		mutex_unlock(&cdata->bank_registers_lock);
 
-	return len;
-
-acc_spi_read_error:
-	mutex_unlock(&cdata->tb.buf_lock);
 	if (b_lock)
 		mutex_unlock(&cdata->bank_registers_lock);
 
 	return err;
 }
 
-static int lis2dw12_spi_write(struct lis2dw12_data *cdata, u8 reg_addr, int len,
-			    u8 *data, bool b_lock)
+static int lis2dw12_spi_write(struct lis2dw12_data *cdata,
+			      u8 reg_addr, int len,
+			      const u8 *data, bool b_lock)
 {
 	int err;
 	struct spi_message msg;
-	struct spi_transfer xfers = {
-		.tx_buf = cdata->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	struct spi_transfer xfers = { };
 
-	if (len >= LIS2DW12_RX_MAX_LENGTH)
-		return -ENOMEM;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= LIS2DW12_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = cdata->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
 
 	mutex_lock(&cdata->tb.buf_lock);
-	cdata->tb.tx_buf[0] = reg_addr;
 
+	cdata->tb.tx_buf[0] = reg_addr;
 	memcpy(&cdata->tb.tx_buf[1], data, len);
 
 	spi_message_init(&msg);
@@ -110,6 +118,7 @@ static int lis2dw12_spi_write(struct lis2dw12_data *cdata, u8 reg_addr, int len,
 	err = spi_sync(to_spi_device(cdata->dev), &msg);
 
 	mutex_unlock(&cdata->tb.buf_lock);
+
 	if (b_lock)
 		mutex_unlock(&cdata->bank_registers_lock);
 
@@ -143,7 +152,7 @@ static int lis2dw12_spi_probe(struct spi_device *spi)
 	return 0;
 }
 
-#if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
 static void lis2dw12_spi_remove(struct spi_device *spi)
 {
 	struct lis2dw12_data *cdata = spi_get_drvdata(spi);
@@ -161,7 +170,7 @@ static int lis2dw12_spi_remove(struct spi_device *spi)
 }
 #endif
 
-#ifdef CONFIG_PM_SLEEP
+#if IS_ENABLED(CONFIG_PM_SLEEP)
 static int lis2dw12_suspend(struct device *dev)
 {
 	struct lis2dw12_data *cdata = spi_get_drvdata(to_spi_device(dev));
@@ -189,7 +198,7 @@ static const struct spi_device_id lis2dw12_ids[] = {
 };
 MODULE_DEVICE_TABLE(spi, lis2dw12_ids);
 
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 static const struct of_device_id lis2dw12_id_table[] = {
 	{ .compatible = "st,lis2dw12", },
 	{ },
@@ -202,7 +211,7 @@ static struct spi_driver lis2dw12_spi_driver = {
 		.owner = THIS_MODULE,
 		.name = LIS2DW12_DEV_NAME,
 		.pm = LIS2DW12_PM_OPS,
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 		.of_match_table = lis2dw12_id_table,
 #endif
 	},
@@ -215,4 +224,5 @@ module_spi_driver(lis2dw12_spi_driver);
 
 MODULE_DESCRIPTION("STMicroelectronics lis2dw12 spi driver");
 MODULE_AUTHOR("Mario Tesi");
+MODULE_AUTHOR("MEMS Software Solutions Team");
 MODULE_LICENSE("GPL v2");

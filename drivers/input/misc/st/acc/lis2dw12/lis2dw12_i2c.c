@@ -37,60 +37,98 @@
 
 #include "lis2dw12_core.h"
 
-static int lis2dw12_i2c_read(struct lis2dw12_data *cdata, u8 reg_addr, int len,
-			   u8 *data, bool b_lock)
+static int lis2dw12_i2c_read(struct lis2dw12_data *cdata,
+			     u8 reg_addr, int len,
+			     u8 *data, bool b_lock)
 {
-	int err = 0;
+	int err;
 	struct i2c_msg msg[2];
 	struct i2c_client *client = to_i2c_client(cdata->dev);
+
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LIS2DW12_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
 
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags;
 	msg[0].len = 1;
-	msg[0].buf = &reg_addr;
+	msg[0].buf = cdata->tb.tx_buf;
 
 	msg[1].addr = client->addr;
 	msg[1].flags = client->flags | I2C_M_RD;
 	msg[1].len = len;
-	msg[1].buf = data;
+	msg[1].buf = cdata->tb.rx_buf;
 
-	if (b_lock) {
+	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
-		err = i2c_transfer(client->adapter, msg, 2);
-		mutex_unlock(&cdata->bank_registers_lock);
-	} else {
-		err = i2c_transfer(client->adapter, msg, 2);
-	}
 
-	return err;
+	mutex_lock(&cdata->tb.buf_lock);
+
+	cdata->tb.tx_buf[0] = reg_addr;
+
+	err = i2c_transfer(client->adapter, msg, 2);
+	if (err == 2)
+		memcpy(data, cdata->tb.rx_buf, len);
+
+	mutex_unlock(&cdata->tb.buf_lock);
+
+	if (b_lock)
+		mutex_unlock(&cdata->bank_registers_lock);
+
+	if (err != 2)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
-static int lis2dw12_i2c_write(struct lis2dw12_data *cdata, u8 reg_addr, int len,
-			    u8 *data, bool b_lock)
+static int lis2dw12_i2c_write(struct lis2dw12_data *cdata,
+			      u8 reg_addr, int len,
+			      const u8 *data, bool b_lock)
 {
-	int err = 0;
-	u8 send[len + 1];
+	int err;
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= LIS2DW12_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
 	msg.addr = client->addr;
 	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	msg.len = len + 1;
+	msg.buf = cdata->tb.tx_buf;
 
-	if (b_lock) {
+	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
-		err = i2c_transfer(client->adapter, &msg, 1);
-		mutex_unlock(&cdata->bank_registers_lock);
-	} else {
-		err = i2c_transfer(client->adapter, &msg, 1);
-	}
 
-	return err;
+	mutex_lock(&cdata->tb.buf_lock);
+
+	cdata->tb.tx_buf[0] = reg_addr;
+	memcpy(&cdata->tb.tx_buf[1], data, len);
+
+	err = i2c_transfer(client->adapter, &msg, 1);
+
+	mutex_unlock(&cdata->tb.buf_lock);
+
+	if (b_lock)
+		mutex_unlock(&cdata->bank_registers_lock);
+
+	if (err != 1)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
 static const struct lis2dw12_transfer_function lis2dw12_tf_i2c = {
@@ -125,7 +163,7 @@ static int lis2dw12_i2c_probe(struct i2c_client *client,
 	return 0;
 }
 
-#if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0)
 static void lis2dw12_i2c_remove(struct i2c_client *client)
 {
 	struct lis2dw12_data *cdata = i2c_get_clientdata(client);
@@ -141,9 +179,9 @@ static int lis2dw12_i2c_remove(struct i2c_client *client)
 
 	return 0;
 }
-#endif
+#endif /* LINUX_VERSION_CODE */
 
-#ifdef CONFIG_PM_SLEEP
+#if IS_ENABLED(CONFIG_PM_SLEEP)
 static int lis2dw12_suspend(struct device *dev)
 {
 	struct lis2dw12_data *cdata = i2c_get_clientdata(to_i2c_client(dev));
@@ -172,20 +210,20 @@ static const struct i2c_device_id lis2dw12_ids[] = {
 };
 MODULE_DEVICE_TABLE(i2c, lis2dw12_ids);
 
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 static const struct of_device_id lis2dw12_id_table[] = {
 	{ .compatible = "st,lis2dw12", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, lis2dw12_id_table);
-#endif
+#endif	/* CONFIG_OF */
 
 static struct i2c_driver lis2dw12_i2c_driver = {
 	.driver = {
 		.owner = THIS_MODULE,
 		.name = LIS2DW12_DEV_NAME,
 		.pm = LIS2DW12_PM_OPS,
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 		.of_match_table = lis2dw12_id_table,
 #endif
 	},
@@ -199,4 +237,5 @@ module_i2c_driver(lis2dw12_i2c_driver);
 MODULE_DESCRIPTION("STMicroelectronics lis2dw12 i2c driver");
 MODULE_AUTHOR("Giuseppe Barba");
 MODULE_AUTHOR("Mario Tesi");
+MODULE_AUTHOR("MEMS Software Solutions Team");
 MODULE_LICENSE("GPL v2");

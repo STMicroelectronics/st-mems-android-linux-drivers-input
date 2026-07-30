@@ -38,10 +38,9 @@ enum {
 #define INPUT_EVENT_TIME_MSB	MSC_SCAN
 #define INPUT_EVENT_TIME_LSB	MSC_MAX
 
-#define AIS2IH_RX_MAX_LENGTH	16
-#define AIS2IH_TX_MAX_LENGTH	16
-
-#define AIS2IH_I2C_MAX_BUFFER_SIZE	32
+#define AIS2IH_MAX_PAYLOAD_LENGTH	32
+#define AIS2IH_RX_MAX_LENGTH		AIS2IH_MAX_PAYLOAD_LENGTH
+#define AIS2IH_TX_MAX_LENGTH		(AIS2IH_MAX_PAYLOAD_LENGTH + 1)
 
 #define to_dev(obj) container_of(obj, struct device, kobj)
 
@@ -66,7 +65,7 @@ struct ais2ih_input_data;
 
 struct ais2ih_input_transfer_function {
 	int (*write)(struct ais2ih_input_data *cdata, u8 reg_addr, int len,
-		     u8 *data, bool b_lock);
+		     const u8 *data, bool b_lock);
 	int (*read)(struct ais2ih_input_data *cdata, u8 reg_addr, int len,
 		    u8 *data, bool b_lock);
 };
@@ -96,6 +95,7 @@ struct ais2ih_input_data {
 	struct device *dev;
 	struct ais2ih_input_sensor_data sensors[AIS2IH_SENSORS_NUMB];
 	struct workqueue_struct *workqueue;
+	struct mutex rw_register_lock;
 	struct mutex bank_registers_lock;
 	const struct ais2ih_input_transfer_function *tf;
 	struct ais2ih_input_transfer_buffer tb;
@@ -105,7 +105,7 @@ int ais2ih_input_common_probe(struct ais2ih_input_data *cdata, int irq,
 			      u16 bustype);
 void ais2ih_input_common_remove(struct ais2ih_input_data *cdata, int irq);
 
-#ifdef CONFIG_PM_SLEEP
+#if IS_ENABLED(CONFIG_PM_SLEEP)
 int ais2ih_input_common_suspend(struct ais2ih_input_data *cdata);
 int ais2ih_input_common_resume(struct ais2ih_input_data *cdata);
 #endif /* CONFIG_PM_SLEEP */

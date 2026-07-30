@@ -38,7 +38,7 @@
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
 
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
@@ -353,16 +353,24 @@ static int lis2dw12_write_data_with_mask(struct lis2dw12_data *cdata,
 	int err;
 	u8 new_data = 0x00, old_data = 0x00;
 
+	mutex_lock(&cdata->rw_register_lock);
 	err = cdata->tf->read(cdata, reg_addr, 1, &old_data, b_lock);
 	if (err < 0)
-		return err;
+		goto unlock_on_uncomplete;
 
 	new_data = ((old_data & (~mask)) | ((data << __ffs(mask)) & mask));
 
-	if (new_data == old_data)
-		return 0;
+	if (new_data == old_data) {
+		err = 0;
+		goto unlock_on_uncomplete;
+	}
 
-	return cdata->tf->write(cdata, reg_addr, 1, &new_data, b_lock);
+	err = cdata->tf->write(cdata, reg_addr, 1, &new_data, b_lock);
+
+unlock_on_uncomplete:
+	mutex_unlock(&cdata->rw_register_lock);
+
+	return err;
 }
 
 static int lis2dw12_input_init(struct lis2dw12_sensor_data *sdata, u16 bustype)
@@ -491,7 +499,7 @@ static int lis2dw12_update_drdy_irq(struct lis2dw12_sensor_data *sdata)
 	}
 
 	return lis2dw12_write_data_with_mask(sdata->cdata, reg_addr, reg_mask,
-					   reg_val >> __ffs(reg_mask), true);
+					   reg_val >> __ffs(reg_mask), false);
 }
 
 static int lis2dw12_set_fs(struct lis2dw12_sensor_data *sdata, unsigned int fs)
@@ -508,7 +516,8 @@ static int lis2dw12_set_fs(struct lis2dw12_sensor_data *sdata, unsigned int fs)
 
 	err = lis2dw12_write_data_with_mask(sdata->cdata, lis2dw12_fs_table.addr,
 					  lis2dw12_fs_table.mask,
-					  lis2dw12_fs_table.fs_avl[i].value, true);
+					  lis2dw12_fs_table.fs_avl[i].value,
+					  false);
 	if (err < 0)
 		return err;
 
@@ -651,7 +660,7 @@ static int lis2dw12_update_hw_odr(struct lis2dw12_sensor_data *sdata, int odr)
 					  LIS2DW12_CTRL1_ADDR,
 					  LIS2DW12_ODR_MASK,
 					  lis2dw12_odr_table.odr_avl[cdata->power_mode][i].value,
-					  true);
+					  false);
 	if (err < 0)
 		return err;
 
@@ -670,14 +679,14 @@ static int lis2dw12_configure_tap_event(struct lis2dw12_sensor_data *sdata,
 						  LIS2DW12_INT_DUR_ADDR,
 						  LIS2DW12_INT_DUR_MASK,
 						  LIS2DW12_INT_DUR_STAP_DEFAULT,
-						  true);
+						  false);
 		if (err < 0)
 			return err;
 
 		err = lis2dw12_write_data_with_mask(sdata->cdata,
 						  LIS2DW12_WAKE_UP_THS_ADDR,
 						  LIS2DW12_WAKE_UP_THS_S_D_TAP_MASK,
-						  LIS2DW12_DIS_BIT, true);
+						  LIS2DW12_DIS_BIT, false);
 		if (err < 0)
 			return err;
 	} else {
@@ -685,14 +694,14 @@ static int lis2dw12_configure_tap_event(struct lis2dw12_sensor_data *sdata,
 						  LIS2DW12_INT_DUR_ADDR,
 						  LIS2DW12_INT_DUR_MASK,
 						  LIS2DW12_INT_DUR_DTAP_DEFAULT,
-						  true);
+						  false);
 		if (err < 0)
 			return err;
 
 		err = lis2dw12_write_data_with_mask(sdata->cdata,
 						  LIS2DW12_WAKE_UP_THS_ADDR,
 						  LIS2DW12_WAKE_UP_THS_S_D_TAP_MASK,
-						  LIS2DW12_EN_BIT, true);
+						  LIS2DW12_EN_BIT, false);
 		if (err < 0)
 			return err;
 	}
@@ -728,7 +737,7 @@ static int _lis2dw12_enable_sensors(struct lis2dw12_sensor_data *sdata)
 						LIS2DW12_CTRL1_ADDR,
 						LIS2DW12_ODR_MASK,
 						lis2dw12_odr_table.odr_avl[cdata->power_mode][i].value,
-						true);
+						false);
 		if (err < 0)
 			return err;
 
@@ -736,7 +745,7 @@ static int _lis2dw12_enable_sensors(struct lis2dw12_sensor_data *sdata)
 						LIS2DW12_CTRL1_ADDR,
 						LIS2DW12_POWER_MODE_MASK,
 						cdata->power_mode,
-						true);
+						false);
 		if (err < 0)
 			return err;
 
@@ -786,7 +795,7 @@ static int _lis2dw12_disable_sensors(struct lis2dw12_sensor_data *sdata)
 					LIS2DW12_CTRL1_ADDR,
 					LIS2DW12_ODR_MASK,
 					lis2dw12_odr_table.odr_avl[sdata->cdata->power_mode][0].value,
-					true);
+					false);
 		if (err < 0)
 			return err;
 
@@ -888,63 +897,63 @@ static int lis2dw12_init_sensors(struct lis2dw12_data *cdata)
 	err = lis2dw12_write_data_with_mask(cdata,
 					  LIS2DW12_CTRL2_ADDR,
 					  LIS2DW12_SOFT_RESET_MASK,
-					  LIS2DW12_EN_BIT, true);
+					  LIS2DW12_EN_BIT, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(cdata,
 					  LIS2DW12_CTRL1_ADDR,
 					  LIS2DW12_LP_MODE_MASK,
-					  LIS2DW12_EN_LP_MODE_02, true);
+					  LIS2DW12_EN_LP_MODE_02, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(cdata,
 					  LIS2DW12_CTRL3_ADDR,
 					  LIS2DW12_LIR_MASK,
-					  LIS2DW12_EN_BIT, true);
+					  LIS2DW12_EN_BIT, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(cdata,
 					  LIS2DW12_CTRL2_ADDR,
 					  LIS2DW12_BDU_MASK,
-					  LIS2DW12_EN_BIT, true);
+					  LIS2DW12_EN_BIT, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(sdata->cdata,
 					  LIS2DW12_FREE_FALL_ADDR,
 					  LIS2DW12_FREE_FALL_THS_MASK,
-					  LIS2DW12_FREE_FALL_THS_DEFAULT, true);
+					  LIS2DW12_FREE_FALL_THS_DEFAULT, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(sdata->cdata,
 					  LIS2DW12_FREE_FALL_ADDR,
 					  LIS2DW12_FREE_FALL_DUR_MASK,
-					  LIS2DW12_FREE_FALL_DUR_DEFAULT, true);
+					  LIS2DW12_FREE_FALL_DUR_DEFAULT, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(sdata->cdata,
 					  LIS2DW12_TAP_THS_Z_ADDR,
 					  LIS2DW12_TAP_AXIS_MASK,
-					  LIS2DW12_TAP_AXIS_ANABLE_ALL, true);
+					  LIS2DW12_TAP_AXIS_ANABLE_ALL, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(sdata->cdata,
 					  LIS2DW12_TAP_THS_X_ADDR,
 					  LIS2DW12_TAP_THS_MASK,
-					  LIS2DW12_TAP_THS_DEFAULT, true);
+					  LIS2DW12_TAP_THS_DEFAULT, false);
 	if (err < 0)
 		return err;
 
 	err = lis2dw12_write_data_with_mask(sdata->cdata,
 					  LIS2DW12_WAKE_UP_THS_ADDR,
 					  LIS2DW12_WAKE_UP_THS_WU_MASK,
-					  LIS2DW12_WAKE_UP_THS_WU_DEFAULT, true);
+					  LIS2DW12_WAKE_UP_THS_WU_DEFAULT, false);
 	if (err < 0)
 		return err;
 
@@ -1177,7 +1186,7 @@ static const struct attribute_group lis2dw12_attribute_groups[] = {
 	},
 };
 
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 static int lis2dw12_parse_dt(struct lis2dw12_data *cdata)
 {
 	u32 val;
@@ -1203,6 +1212,7 @@ int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype)
 	u8 wai = 0;
 	struct lis2dw12_sensor_data *sdata;
 
+	mutex_init(&cdata->rw_register_lock);
 	mutex_init(&cdata->bank_registers_lock);
 	mutex_init(&cdata->tb.buf_lock);
 
@@ -1220,7 +1230,7 @@ int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype)
 
 		cdata->irq = irq;
 
-#ifdef CONFIG_OF
+#if IS_ENABLED(CONFIG_OF)
 		dev_info(cdata->dev, "dt enabled: parsing dt info");
 		err = lis2dw12_parse_dt(cdata);
 		if (err < 0) {
@@ -1321,7 +1331,7 @@ void lis2dw12_common_remove(struct lis2dw12_data *cdata, int irq)
 }
 EXPORT_SYMBOL(lis2dw12_common_remove);
 
-#ifdef CONFIG_PM_SLEEP
+#if IS_ENABLED(CONFIG_PM_SLEEP)
 static int lis2dw12_resume_sensors(struct lis2dw12_sensor_data *sdata)
 {
 	if (!sdata->enabled)
