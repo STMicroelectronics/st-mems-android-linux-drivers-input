@@ -23,7 +23,7 @@
 #include <linux/of_gpio.h>
 #endif
 
-#include <linux/platform_data/st/ais2dw12.h>
+#include "linux/platform_data/st/ais2dw12.h"
 #include "stm_input_ais2dw12_core.h"
 
 #define AIS2DW12_WHO_AM_I_ADDR			0x0f

@@ -9,7 +9,7 @@
 
 #ifndef __AIS2DW12_INPUT_PLATFORM_DATA_
 #define __AIS2DW12_INPUT_PLATFORM_DATA_
-struct ais2dw12_platform_data {
+struct ais2dw12_input_platform_data {
 	u8 drdy_int_pin;
 };
 #endif /* __AIS2DW12_INPUT_PLATFORM_DATA_ */

@@ -23,7 +23,7 @@
 #include <linux/of_gpio.h>
 #endif
 
-#include <linux/platform_data/st/ais2ih.h>
+#include "linux/platform_data/st/ais2ih.h"
 #include "stm_input_ais2ih_core.h"
 
 #define AIS2IH_WHO_AM_I_ADDR		0x0f

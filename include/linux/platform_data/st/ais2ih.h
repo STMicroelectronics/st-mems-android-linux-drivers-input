@@ -9,7 +9,7 @@
 
 #ifndef __AIS2IH_INPUT_PLATFORM_DATA_
 #define __AIS2IH_INPUT_PLATFORM_DATA_
-struct ais2ih_platform_data {
+struct ais2ih_input_platform_data {
 	u8 drdy_int_pin;
 };
 #endif /* __AIS2IH_INPUT_PLATFORM_DATA_ */
