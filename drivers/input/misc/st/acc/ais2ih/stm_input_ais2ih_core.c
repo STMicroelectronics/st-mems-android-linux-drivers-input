@@ -503,10 +503,9 @@ ais2ih_input_set_fs(struct ais2ih_input_sensor_data *sdata, unsigned int fs)
 {
 	int err, i;
 
-	for (i = 0; i < AIS2IH_FS_LIST_NUM; i++) {
+	for (i = 0; i < AIS2IH_FS_LIST_NUM; i++)
 		if (ais2ih_input_fs_table.fs_avl[i].urv == fs)
 			break;
-	}
 
 	if (i == AIS2IH_FS_LIST_NUM)
 		return -EINVAL;
@@ -1034,11 +1033,13 @@ static ssize_t store_resolution_mode(struct device *dev,
 	int i;
 	struct ais2ih_input_sensor_data *sdata = dev_get_drvdata(dev);
 
-	for (i = 0; i < AIS2IH_FS_LIST_NUM; i++) {
+	for (i = 0; i < AIS2IH_FS_LIST_NUM; i++)
 		if (sdata->c_gain ==
 			ais2ih_input_fs_table.fs_avl[i].gain[sdata->cdata->power_mode])
 			break;
-	}
+
+	if (i == AIS2IH_FS_LIST_NUM)
+		return -EINVAL;
 
 	if (!strncmp(buf, "low", count - 1))
 		sdata->cdata->power_mode = AIS2IH_LP_MODE;
@@ -1126,6 +1127,9 @@ static ssize_t show_current_scale(struct device *dev,
 		if (sdata->c_gain ==
 			ais2ih_input_fs_table.fs_avl[i].gain[sdata->cdata->power_mode])
 			break;
+
+	if (i == AIS2IH_FS_LIST_NUM)
+		return -EINVAL;
 
 	return sprintf(buf, "%d\n", ais2ih_input_fs_table.fs_avl[i].urv);
 }

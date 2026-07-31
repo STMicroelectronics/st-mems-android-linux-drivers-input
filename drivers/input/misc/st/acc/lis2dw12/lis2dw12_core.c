@@ -1013,6 +1013,9 @@ static ssize_t lis2dw12_set_resolution_mode(struct device *dev,
 			break;
 	}
 
+	if (i == LIS2DW12_FS_LIST_NUM)
+		return -EINVAL;
+
 	if (!strncmp(buf, "low", count - 1))
 		sdata->cdata->power_mode = LIS2DW12_LP_MODE;
 	else if (!strncmp(buf, "high", count - 1))
@@ -1087,6 +1090,9 @@ static ssize_t lis2dw12_get_cur_scale(struct device *dev,
 		if (sdata->c_gain ==
 			lis2dw12_fs_table.fs_avl[i].gain[sdata->cdata->power_mode])
 			break;
+
+	if (i == LIS2DW12_FS_LIST_NUM)
+		return -EINVAL;
 
 	return sprintf(buf, "%d\n", lis2dw12_fs_table.fs_avl[i].urv);
 }

@@ -383,10 +383,9 @@ ais2dw12_input_set_fs(struct ais2dw12_input_sensor_data *sdata, unsigned int fs)
 {
 	int err, i;
 
-	for (i = 0; i < AIS2DW12_FS_LIST_NUM; i++) {
+	for (i = 0; i < AIS2DW12_FS_LIST_NUM; i++)
 		if (ais2dw12_input_fs_table.fs_avl[i].urv == fs)
 			break;
-	}
 
 	if (i == AIS2DW12_FS_LIST_NUM)
 		return -EINVAL;
@@ -892,6 +891,9 @@ static ssize_t show_current_scale(struct device *dev,
 		if (sdata->c_gain ==
 			ais2dw12_input_fs_table.fs_avl[i].gain[sdata->cdata->power_mode])
 			break;
+
+	if (i == AIS2DW12_FS_LIST_NUM)
+		return -EINVAL;
 
 	return sprintf(buf, "%d\n", ais2dw12_input_fs_table.fs_avl[i].urv);
 }
