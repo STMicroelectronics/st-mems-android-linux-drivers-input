@@ -26,6 +26,7 @@
 #include <linux/version.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -989,9 +990,13 @@ int h3lis100dl_common_probe(struct h3lis100dl_data *acc)
 	/* As default, do not report information */
 	atomic_set(&acc->enabled, 0);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&acc->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	acc->hr_timer.function = &h3lis100dl_timer_func_queue_work;
-
+#else
+	hrtimer_setup(&acc->hr_timer, &h3lis100dl_timer_func_queue_work,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 	mutex_unlock(&acc->lock);
 
 	dev_info(acc->dev, "%s: probed\n", H3LIS100DL_DEV_NAME);

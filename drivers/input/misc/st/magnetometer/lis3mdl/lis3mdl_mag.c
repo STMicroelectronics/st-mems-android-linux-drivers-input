@@ -39,6 +39,7 @@
 #include <linux/irq.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -841,8 +842,13 @@ int lis3mdl_mag_probe(struct lis3mdl_dev *dev)
 	if (lis3mdl_workqueue == 0)
 		lis3mdl_workqueue = create_workqueue("lis3mdl_workqueue");
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&dev->hr_timer_mag, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	dev->hr_timer_mag.function = &poll_function_read_mag;
+#else
+	hrtimer_setup(&dev->hr_timer_mag, &poll_function_read_mag,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	mutex_lock(&dev->lock);
 

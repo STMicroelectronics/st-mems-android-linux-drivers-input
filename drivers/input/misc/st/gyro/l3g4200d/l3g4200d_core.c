@@ -40,7 +40,6 @@
 *******************************************************************************/
 
 #include <linux/mutex.h>
-#include <linux/version.h>
 #include <linux/err.h>
 #include <linux/errno.h>
 #include <linux/delay.h>
@@ -52,6 +51,7 @@
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -778,8 +778,13 @@ static int l3g4200d_input_init(struct l3g4200d_data *gyro)
 	if (!gyro->work_queue)
 		return -ENOMEM;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&gyro->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	gyro->hr_timer.function = &l3g4200d_timer_poll;
+#else
+	hrtimer_setup(&gyro->hr_timer, &l3g4200d_timer_poll, CLOCK_MONOTONIC,
+			HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	INIT_WORK(&gyro->poll_work, l3g4200d_poll_work_func);
 

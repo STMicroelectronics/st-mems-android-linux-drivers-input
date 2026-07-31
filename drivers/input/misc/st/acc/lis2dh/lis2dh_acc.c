@@ -68,6 +68,7 @@ Version History.
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include <linux/version.h>
 
 #include "lis2dh.h"
 
@@ -1066,8 +1067,13 @@ int lis2dh_acc_probe(struct lis2dh_acc_status *stat)
 	if (!stat->acc_workqueue)
 		goto err_remove_sysfs_int;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&stat->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer.function = &lis2dh_acc_poll_function_read;
+#else
+	hrtimer_setup(&stat->hr_timer, &lis2dh_acc_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	INIT_WORK(&stat->polling_task, lis2dh_acc_input_work_func);
 

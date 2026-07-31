@@ -41,6 +41,7 @@
 #include <linux/irq.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #include "lsm303c.h"
 
@@ -1088,8 +1089,13 @@ int lsm303c_mag_probe(struct lsm303c_mag_dev *dev)
 	if (!dev->mag_workqueue)
 		goto err_input_cleanup;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&dev->hr_timer_mag, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	dev->hr_timer_mag.function = &poll_function_read_mag;
+#else
+	hrtimer_setup(&dev->hr_timer_mag, &poll_function_read_mag,
+					  CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 	INIT_WORK(&dev->input_work_mag, poll_function_work_mag);
 
 	mutex_unlock(&dev->lock);

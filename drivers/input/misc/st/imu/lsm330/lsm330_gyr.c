@@ -71,6 +71,7 @@
 #include <linux/moduleparam.h>
 #include <linux/kernel.h>
 #include <linux/stat.h>
+#include <linux/version.h>
 
 #include "lsm330.h" 
 /* Maximum polled-device-reported rot speed value value in dps */
@@ -1421,8 +1422,13 @@ int lsm330_gyr_probe(struct lsm330_gyr_status *stat)
 	if (!stat->gyr_workqueue)
 		goto err6;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&stat->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer.function = &poll_function_read;
+#else
+	hrtimer_setup(&stat->hr_timer, &poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	mutex_unlock(&stat->lock);
 

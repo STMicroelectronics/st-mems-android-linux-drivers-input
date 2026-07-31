@@ -3058,11 +3058,17 @@ int lsm303d_probe(struct lsm303d_dev *dev)
 	if(lsm303d_workqueue == 0)
 		lsm303d_workqueue = create_workqueue("lsm303d_workqueue");
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&stat->hr_timer_acc, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer_acc.function = &poll_function_read_acc;
 	hrtimer_init(&stat->hr_timer_mag, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer_mag.function = &poll_function_read_mag;
-
+#else
+	hrtimer_setup(&stat->hr_timer_acc, &poll_function_read_acc,
+					   CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	hrtimer_setup(&stat->hr_timer_mag, &poll_function_read_mag,
+					   CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 	mutex_init(&stat->lock);
 	mutex_lock(&stat->lock);
 

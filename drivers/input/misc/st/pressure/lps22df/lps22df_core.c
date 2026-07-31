@@ -494,8 +494,13 @@ static int lps22df_prs_prepare_hrtimer(struct lps22df_prs_data *prs)
 	}
 	INIT_WORK(&prs->input_work, lps22df_prs_input_work_func);
 	mutex_lock(&prs->lock);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&prs->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	prs->hr_timer.function = &lps22df_prs_poll_function_read;
+#else
+	hrtimer_setup(&prs->hr_timer, &lps22df_prs_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 	mutex_unlock(&prs->lock);
 	return 0;
 }

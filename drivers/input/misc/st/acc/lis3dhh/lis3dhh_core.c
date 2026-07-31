@@ -455,8 +455,13 @@ int lis3dhh_common_probe(struct lis3dhh_acc_status *stat)
 		goto err_wk_null;
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&stat->hr_timer_poll, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer_poll.function = &lis3dhh_acc_hr_timer_poll_function;
+#else
+	hrtimer_setup(&stat->hr_timer_poll, &lis3dhh_acc_hr_timer_poll_function,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	err = lis3dhh_acc_input_init(stat);
 	if (err < 0) {

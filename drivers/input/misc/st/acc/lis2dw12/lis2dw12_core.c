@@ -37,6 +37,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
+#include <linux/version.h>
 
 #if IS_ENABLED(CONFIG_OF)
 #include <linux/of.h>
@@ -889,10 +890,17 @@ static int lis2dw12_init_sensors(struct lis2dw12_data *cdata)
 		}
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&cdata->sensors[LIS2DW12_ACCEL].hr_timer, CLOCK_MONOTONIC,
 		     HRTIMER_MODE_REL);
 	cdata->sensors[LIS2DW12_ACCEL].hr_timer.function =
 					&lis2dw12_hrtimer_acc_callback;
+#else
+	hrtimer_setup(&cdata->sensors[LIS2DW12_ACCEL].hr_timer,
+			&lis2dw12_hrtimer_acc_callback,
+			CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
+
 	cdata->selftest_status = 0;
 	err = lis2dw12_write_data_with_mask(cdata,
 					  LIS2DW12_CTRL2_ADDR,

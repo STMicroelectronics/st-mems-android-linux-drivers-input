@@ -20,6 +20,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/version.h>
+
 #include "lsm303ah_core.h"
 
 #define LSM303AH_CTRL1_ADDR			0x20
@@ -883,10 +884,17 @@ static int lsm303ah_init_sensors(struct st_common_data *cdata)
 		}
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&cdata->sensors[LSM303AH_ACCEL].hr_timer, CLOCK_MONOTONIC,
 						HRTIMER_MODE_REL);
 	cdata->sensors[LSM303AH_ACCEL].hr_timer.function =
 						&st_sensor_poll_function;
+#else
+	hrtimer_setup(&cdata->sensors[LSM303AH_ACCEL].hr_timer,
+						&st_sensor_poll_function,
+						CLOCK_MONOTONIC,
+						HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	/*
 	 * Soft reset the device on power on.

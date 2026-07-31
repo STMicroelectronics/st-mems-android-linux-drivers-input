@@ -20,6 +20,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/version.h>
+
 #include "ism303dac_core.h"
 
 #define ISM303DAC_CTRL1_ADDR			0x20
@@ -695,10 +696,16 @@ static int ism303dac_init_sensors(struct st_common_data *cdata)
 		}
 	}
 
-	hrtimer_init(&cdata->sensors[ISM303DAC_ACCEL].hr_timer, CLOCK_MONOTONIC,
-						HRTIMER_MODE_REL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
+	hrtimer_init(&cdata->sensors[ISM303DAC_ACCEL].hr_timer,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	cdata->sensors[ISM303DAC_ACCEL].hr_timer.function =
-						&st_ism303dac_sensor_poll_function;
+					&st_ism303dac_sensor_poll_function;
+#else
+	hrtimer_setup(&cdata->sensors[ISM303DAC_ACCEL].hr_timer,
+					&st_ism303dac_sensor_poll_function,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	/*
 	 * Soft reset the device on power on.

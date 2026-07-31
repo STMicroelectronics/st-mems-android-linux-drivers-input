@@ -16,6 +16,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
+#include <linux/version.h>
 
 #if IS_ENABLED(CONFIG_OF)
 #include <linux/of.h>
@@ -726,10 +727,16 @@ static int ais2dw12_input_init_sensors(struct ais2dw12_input_data *cdata)
 		}
 	}
 
-	hrtimer_init(&cdata->sensors[AIS2DW12_ACCEL].hr_timer, CLOCK_MONOTONIC,
-		     HRTIMER_MODE_REL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
+	hrtimer_init(&cdata->sensors[AIS2DW12_ACCEL].hr_timer,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	cdata->sensors[AIS2DW12_ACCEL].hr_timer.function =
 					&ais2dw12_input_hrtimer_acc_callback;
+#else
+	hrtimer_setup(&cdata->sensors[AIS2DW12_ACCEL].hr_timer,
+					&ais2dw12_input_hrtimer_acc_callback,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 	cdata->selftest_status = 0;
 	err = ais2dw12_input_write_data_with_mask(cdata,
 					  AIS2DW12_CTRL2_ADDR,

@@ -1491,9 +1491,15 @@ int lsm6ds3_common_probe(struct lsm6ds3_data *cdata, int irq, u16 bustype)
 			sdata->c_gain = lsm6ds3_fs_table[i].fs_avl[0].gain;
 			sdata->poll_interval = 1000 / sdata->c_odr;
 
-			hrtimer_init(&sdata->hr_timer, CLOCK_MONOTONIC,
-				     HRTIMER_MODE_REL);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
+			hrtimer_init(&sdata->hr_timer,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 			sdata->hr_timer.function = &lsm6ds3_poll_function_read;
+#else
+			hrtimer_setup(&sdata->hr_timer,
+					&lsm6ds3_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 			INIT_WORK(&sdata->input_work, lsm6ds3_push_data);
 		}
 		if (i == LSM6DS3_STEP_COUNTER) {

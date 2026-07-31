@@ -421,9 +421,13 @@ static int lps22hh_input_init(struct lps22hh_data *prs)
 		return -ENOMEM;
 
 	INIT_WORK(&prs->input_work, lps22hh_input_work_func);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&prs->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	prs->hr_timer.function = &lps22hh_poll_function_read;
-
+#else
+	hrtimer_setup(&prs->hr_timer, &lps22hh_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 	prs->input_dev_pres = input_allocate_device();
 	if (!prs->input_dev_pres) {
 		dev_err(prs->dev, "input device allocate failed\n");

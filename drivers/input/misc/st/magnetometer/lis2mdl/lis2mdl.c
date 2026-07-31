@@ -176,14 +176,18 @@ static int lis2mdl_init_sensor(struct st_common_data *cdata)
 	struct lis2mdl_data *sdata = cdata->sensors;
 
 	INIT_WORK(&cdata->sensors->input_work, lis2mdl_poll_wk);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&cdata->sensors->hr_timer, CLOCK_MONOTONIC,
 					HRTIMER_MODE_REL);
+	cdata->sensors->hr_timer.function = &lis2mdl_poll_function;
+#else
+	hrtimer_setup(&cdata->sensors->hr_timer, &lis2mdl_poll_function,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	err = lis2mdl_disable_sensor(sdata);
 	if (err < 0)
 		return err;
-
-	cdata->sensors->hr_timer.function = &lis2mdl_poll_function;
 
 	/*
 	* Enable offset cancellation

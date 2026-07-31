@@ -1223,8 +1223,14 @@ int lis2hh12_common_probe(struct lis2hh12_status *stat)
 
 	stat->hr_timer_poll_work_queue = 
 			create_workqueue("lis2hh12_acc_hr_timer_poll_wq");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&stat->hr_timer_poll, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer_poll.function = &lis2hh12_acc_hr_timer_poll_function;
+#else
+	hrtimer_setup(&stat->hr_timer_poll,
+					&lis2hh12_acc_hr_timer_poll_function,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	err = lis2hh12_acc_input_init(stat);
 	if (err < 0) {

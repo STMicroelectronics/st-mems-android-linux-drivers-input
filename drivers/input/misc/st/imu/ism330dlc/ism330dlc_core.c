@@ -20,6 +20,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -779,6 +780,7 @@ static int ism330dlc_init_sensors(struct ism330dlc_data *cdata)
 		}
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&cdata->sensors[ISM330DLC_ACCEL].hr_timer, CLOCK_MONOTONIC,
 		     HRTIMER_MODE_REL);
 	hrtimer_init(&cdata->sensors[ISM330DLC_GYRO].hr_timer, CLOCK_MONOTONIC,
@@ -787,7 +789,14 @@ static int ism330dlc_init_sensors(struct ism330dlc_data *cdata)
 						&ism330dlc_poll_function_read;
 	cdata->sensors[ISM330DLC_GYRO].hr_timer.function =
 						&ism330dlc_poll_function_read;
-
+#else
+	hrtimer_setup(&cdata->sensors[ISM330DLC_ACCEL].hr_timer,
+					&ism330dlc_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	hrtimer_setup(&cdata->sensors[ISM330DLC_GYRO].hr_timer,
+					&ism330dlc_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	/* Software reset */
 	err = ism330dlc_write_data_with_mask(cdata, ISM330DLC_RESET_ADDR,

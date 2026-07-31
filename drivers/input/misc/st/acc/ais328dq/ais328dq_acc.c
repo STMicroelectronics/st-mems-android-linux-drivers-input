@@ -42,6 +42,7 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/module.h>
+#include <linux/version.h>
 
 #include "ais328dq.h"
 
@@ -971,8 +972,13 @@ static int ais328dq_acc_input_init(struct ais328dq_acc_data *acc)
 	if (!acc->work_queue)
 		return -ENOMEM;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&acc->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	acc->hr_timer.function = &ais328dq_timer_poll;
+#else
+	hrtimer_setup(&acc->hr_timer, &ais328dq_timer_poll,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	INIT_WORK(&acc->poll_work, ais328dq_poll_work_func);
 

@@ -19,6 +19,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -831,9 +832,14 @@ static int asm330lhh_init_sensors(struct asm330lhh_data *cdata)
 			}
 
 #ifndef CONFIG_ASM330LHH_IRQ_THREAD
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&cdata->sensors[i].hr_timer, CLOCK_MONOTONIC,
 		     HRTIMER_MODE_REL);
 	cdata->sensors[i].hr_timer.function = &asm330lhh_poll_function_read;
+#else
+	hrtimer_setup(&cdata->sensors[i].hr_timer, &asm330lhh_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	cdata->sensors[i].oldktime = ktime_set(0,
 			MS_TO_NS(cdata->sensors[i].poll_interval));

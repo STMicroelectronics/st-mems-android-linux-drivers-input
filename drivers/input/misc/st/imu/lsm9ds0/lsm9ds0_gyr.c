@@ -62,6 +62,7 @@
 #include <linux/moduleparam.h>
 #include <linux/kernel.h>
 #include <linux/stat.h>
+#include <linux/version.h>
 
 #include "lsm9ds0.h"
 
@@ -1237,8 +1238,13 @@ int lsm9ds0_gyr_probe(struct lsm9ds0_gyr_dev *dev)
 	if (!dev->gyr_workqueue)
 		goto err6;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&dev->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	dev->hr_timer.function = &poll_function_read;
+#else
+	hrtimer_setup(&dev->hr_timer, &poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	mutex_unlock(&dev->lock);
 

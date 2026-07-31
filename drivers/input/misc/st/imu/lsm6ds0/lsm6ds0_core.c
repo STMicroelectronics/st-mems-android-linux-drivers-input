@@ -2227,10 +2227,17 @@ int32_t lsm6ds0_common_probe(struct lsm6ds0_status *stat)
 	if (!lsm6ds0_workqueue)
 		lsm6ds0_workqueue = create_workqueue("lsm6ds0_workqueue");
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&stat->hr_timer_acc, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer_acc.function = &poll_function_read_acc;
 	hrtimer_init(&stat->hr_timer_gyr, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	stat->hr_timer_gyr.function = &poll_function_read_gyr;
+#else
+	hrtimer_setup(&stat->hr_timer_acc, &poll_function_read_acc,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	hrtimer_setup(&stat->hr_timer_gyr, &poll_function_read_gyr,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	stat->pdata_main = kzalloc(sizeof(*stat->pdata_main), GFP_KERNEL);
 	stat->pdata_acc = kzalloc(sizeof(*stat->pdata_acc), GFP_KERNEL);

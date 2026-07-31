@@ -20,6 +20,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
+#include <linux/version.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -955,6 +956,7 @@ static int lsm6dsl_init_sensors(struct lsm6dsl_data *cdata)
 		}
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&cdata->sensors[LSM6DSL_ACCEL].hr_timer, CLOCK_MONOTONIC,
 		     HRTIMER_MODE_REL);
 	hrtimer_init(&cdata->sensors[LSM6DSL_GYRO].hr_timer, CLOCK_MONOTONIC,
@@ -963,6 +965,14 @@ static int lsm6dsl_init_sensors(struct lsm6dsl_data *cdata)
 						&lsm6dsl_poll_function_read;
 	cdata->sensors[LSM6DSL_GYRO].hr_timer.function =
 						&lsm6dsl_poll_function_read;
+#else
+	hrtimer_setup(&cdata->sensors[LSM6DSL_ACCEL].hr_timer,
+					&lsm6dsl_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	hrtimer_setup(&cdata->sensors[LSM6DSL_GYRO].hr_timer,
+					&lsm6dsl_poll_function_read,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	cdata->steps_c = 0;
 	cdata->reset_steps = false;

@@ -58,6 +58,7 @@ Version History.
 #include <linux/slab.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
+#include <linux/version.h>
 
 #include "lsm330.h"
 
@@ -1761,8 +1762,14 @@ int lsm330_acc_probe(struct lsm330_acc_data *acc)
 	if (!acc->acc_workqueue)
 		goto err_destoyworkqueue2;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&acc->hr_timer_acc, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	acc->hr_timer_acc.function = &poll_function_read_acc;
+#else
+	hrtimer_setup(&acc->hr_timer_acc, &poll_function_read_acc,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
+
 	INIT_WORK(&acc->input_work_acc, poll_function_work_acc);
 
 	mutex_unlock(&acc->lock);

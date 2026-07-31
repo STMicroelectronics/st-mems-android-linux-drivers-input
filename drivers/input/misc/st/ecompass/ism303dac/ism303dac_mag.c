@@ -17,6 +17,7 @@
 #include <linux/input.h>
 #include <linux/types.h>
 #include <linux/version.h>
+
 #include "ism303dac_core.h"
 
 
@@ -156,14 +157,20 @@ static int ism303dac_mag_init_sensor(struct st_common_data *cdata)
 	struct st_sensor_data *sdata = cdata->sensors;
 
 	INIT_WORK(&cdata->sensors->input_work, ism303dac_mag_poll_wk);
-	hrtimer_init(&cdata->sensors->hr_timer, CLOCK_MONOTONIC,
-					HRTIMER_MODE_REL);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
+	hrtimer_init(&cdata->sensors->hr_timer,
+				CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	cdata->sensors->hr_timer.function = &st_ism303dac_sensor_poll_function;
+#else
+	hrtimer_setup(&cdata->sensors->hr_timer,
+				&st_ism303dac_sensor_poll_function,
+				CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	err = ism303dac_mag_disable_sensor(sdata);
 	if (err < 0)
 		return err;
-
-	cdata->sensors->hr_timer.function = &st_ism303dac_sensor_poll_function;
 
 	/*
 	* Enable offset cancellation

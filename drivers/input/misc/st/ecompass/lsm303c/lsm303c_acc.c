@@ -43,6 +43,7 @@
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include <linux/version.h>
 
 #include "lsm303c.h"
 
@@ -1135,8 +1136,14 @@ int lsm303c_acc_probe(struct lsm303c_acc_dev *dev)
 
 	dev->hr_timer_poll_work_queue =
 			create_workqueue("lsm303c_acc_hr_timer_poll_wq");
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0)
 	hrtimer_init(&dev->hr_timer_poll, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	dev->hr_timer_poll.function = &lsm303c_acc_hr_timer_poll_function;
+#else
+	hrtimer_setup(&dev->hr_timer_poll, &lsm303c_acc_hr_timer_poll_function,
+					CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+#endif /* LINUX_VERSION_CODE */
 
 	err = lsm303c_acc_input_init(dev);
 	if (err < 0) {
