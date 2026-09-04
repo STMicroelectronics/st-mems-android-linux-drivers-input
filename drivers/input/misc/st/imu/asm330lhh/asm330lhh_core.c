@@ -612,7 +612,7 @@ static void poll_function_work(struct work_struct *input_work)
 	ktdelta = ktime_set(0, (asm330lhh_get_time_ns() - sdata->timestamp));
 
 	/* Avoid negative value in case of High ODR. */
-	if (sdata->oldktime.tv64 > ktdelta.tv64)
+	if (ktime_after(sdata->oldktime, ktdelta))
 		tmpkt = ktime_sub(sdata->oldktime, ktdelta);
 	else
 		tmpkt = sdata->oldktime;
