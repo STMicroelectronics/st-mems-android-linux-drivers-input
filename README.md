@@ -36,6 +36,7 @@ The repository currently contains drivers supporting the following Longterm Supp
 >    * 6.1
 >    * 6.6
 >    * 6.12
+>    * 6.18
 
 STM sensor drivers are located under the directory [drivers/input/misc/st](https://github.com/STMicroelectronics/st-mems-android-linux-drivers-input/tree/master/drivers/input/misc/st) organized in folders by sensor type:
 
