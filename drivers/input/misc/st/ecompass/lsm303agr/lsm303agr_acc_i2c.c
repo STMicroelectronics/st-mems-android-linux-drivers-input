@@ -203,7 +203,7 @@ static struct i2c_driver lsm303agr_acc_i2c_driver = {
 
 module_i2c_driver(lsm303agr_acc_i2c_driver);
 
-MODULE_DESCRIPTION("lsm303agr accelerometer i2c driver");
+MODULE_DESCRIPTION("STMicroelectronics lsm303agr accelerometer i2c driver");
 MODULE_AUTHOR("Armando Visconti");
 MODULE_AUTHOR("Matteo Dameno");
 MODULE_AUTHOR("Denis Ciocca");

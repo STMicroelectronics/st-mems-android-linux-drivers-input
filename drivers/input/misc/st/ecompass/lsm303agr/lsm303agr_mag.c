@@ -554,4 +554,6 @@ void lsm303agr_mag_remove(struct lsm303agr_common_data *cdata)
 }
 EXPORT_SYMBOL(lsm303agr_mag_remove);
 
+MODULE_DESCRIPTION("STMicroelectronics lsm303agr magnetometer spi driver");
+MODULE_AUTHOR("STMicroelectronics - MEMS Software Solutions Team");
 MODULE_LICENSE("GPL v2");

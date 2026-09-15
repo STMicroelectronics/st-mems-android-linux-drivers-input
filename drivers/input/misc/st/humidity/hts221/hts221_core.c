@@ -909,5 +909,6 @@ void hts221_remove(struct hts221_dev *dev)
 }
 EXPORT_SYMBOL(hts221_remove);
 
+MODULE_DESCRIPTION("hts221 core driver");
 MODULE_AUTHOR("Lorenzo Bianconi <lorenzo.bianconi@st.com>");
 MODULE_LICENSE("GPL v2");

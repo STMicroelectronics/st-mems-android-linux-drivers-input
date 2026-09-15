@@ -217,7 +217,7 @@ static struct spi_driver lsm303agr_acc_spi_driver = {
 
 module_spi_driver(lsm303agr_acc_spi_driver);
 
-MODULE_DESCRIPTION("lsm303agr accelerometer spi driver");
+MODULE_DESCRIPTION("STMicroelectronics lsm303agr accelerometer spi driver");
 MODULE_AUTHOR("Giuseppe Barba");
 MODULE_LICENSE("GPL v2");
 

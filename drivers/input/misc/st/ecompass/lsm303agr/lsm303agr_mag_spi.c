@@ -218,7 +218,7 @@ static struct spi_driver lsm303agr_mag_spi_driver = {
 
 module_spi_driver(lsm303agr_mag_spi_driver);
 
-
+MODULE_DESCRIPTION("STMicroelectronics lsm303agr magnetometer spi driver");
 MODULE_AUTHOR("Giuseppe Barba");
+MODULE_AUTHOR("STMicroelectronics - MEMS Software Solutions Team");
 MODULE_LICENSE("GPL v2");
-
