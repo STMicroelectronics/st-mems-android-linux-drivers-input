@@ -95,6 +95,7 @@ struct ais2ih_input_data {
 	s64 timestamp;
 	struct device *dev;
 	struct ais2ih_input_sensor_data sensors[AIS2IH_SENSORS_NUMB];
+	struct workqueue_struct *workqueue;
 	struct mutex bank_registers_lock;
 	const struct ais2ih_input_transfer_function *tf;
 	struct ais2ih_input_transfer_buffer tb;

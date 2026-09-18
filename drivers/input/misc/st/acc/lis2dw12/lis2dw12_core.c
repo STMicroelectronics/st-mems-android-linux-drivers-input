@@ -194,8 +194,6 @@ enum {
 	LIS2DW12_MODE_COUNT,
 };
 
-static struct workqueue_struct *lis2dw12_workqueue;
-
 static const struct lis2dw12_sensor_name {
 	const char *name;
 	const char *description;
@@ -362,7 +360,7 @@ static int lis2dw12_write_data_with_mask(struct lis2dw12_data *cdata,
 	new_data = ((old_data & (~mask)) | ((data << __ffs(mask)) & mask));
 
 	if (new_data == old_data)
-		return 1;
+		return 0;
 
 	return cdata->tf->write(cdata, reg_addr, 1, &new_data, b_lock);
 }
@@ -371,7 +369,7 @@ static int lis2dw12_input_init(struct lis2dw12_sensor_data *sdata, u16 bustype)
 {
 	int err = 0;
 
-	sdata->input_dev = input_allocate_device();
+	sdata->input_dev = devm_input_allocate_device(sdata->cdata->dev);
 	if (!sdata->input_dev) {
 		dev_err(sdata->cdata->dev, "failed to allocate input device");
 		return -ENOMEM;
@@ -396,7 +394,8 @@ static int lis2dw12_input_init(struct lis2dw12_sensor_data *sdata, u16 bustype)
 	if (err) {
 		dev_err(sdata->cdata->dev, "unable to register sensor %s\n",
 			sdata->name);
-		input_free_device(sdata->input_dev);
+		sdata->input_dev = NULL;
+		return err;
 	}
 
 	return err;
@@ -404,8 +403,12 @@ static int lis2dw12_input_init(struct lis2dw12_sensor_data *sdata, u16 bustype)
 
 static void lis2dw12_input_cleanup(struct lis2dw12_sensor_data *sdata)
 {
+	if (!sdata->input_dev) {
+		pr_warn("Input device is already cleaned up.\n");
+		return;
+	}
 	input_unregister_device(sdata->input_dev);
-	input_free_device(sdata->input_dev);
+	sdata->input_dev = NULL; // Prevent further use
 }
 
 static void lis2dw12_report_3axes_event(struct lis2dw12_sensor_data *sdata,
@@ -531,7 +534,8 @@ static int lis2dw12_get_acc_data(struct lis2dw12_data *cdata)
 	if (err < 0) {
 		dev_err(cdata->dev, "get acc data failed %d\n", err);
 		return err;
-	} else {
+	}
+
 		xyz[0] = lis2dw12_data_align_bit(data[1], data[0], cdata->power_mode);
 		xyz[1] = lis2dw12_data_align_bit(data[3], data[2], cdata->power_mode);
 		xyz[2] = lis2dw12_data_align_bit(data[5], data[4], cdata->power_mode);
@@ -541,17 +545,16 @@ static int lis2dw12_get_acc_data(struct lis2dw12_data *cdata)
 		xyz[2] *= sdata->c_gain;
 
 		lis2dw12_report_3axes_event(sdata, xyz, sdata->timestamp);
-	}
-	
+
 	return 0;
 }
 
 static void lis2dw12_acc_poll_function_work(struct work_struct *input_work)
 {
 	struct lis2dw12_sensor_data *sdata;
+
 	sdata = container_of((struct work_struct *)input_work,
 			     struct lis2dw12_sensor_data, input_work);
-
 	lis2dw12_get_acc_data(sdata->cdata);
 }
 
@@ -563,7 +566,9 @@ static enum hrtimer_restart lis2dw12_hrtimer_acc_callback(struct hrtimer *timer)
 			     hr_timer);
 
 	sdata->timestamp = lis2dw12_get_time_ns();
-	queue_work(lis2dw12_workqueue, &sdata->input_work);
+
+	queue_work(sdata->cdata->workqueue, &sdata->input_work);
+
 	hrtimer_forward(timer, ktime_get(), sdata->oldktime);
 
 	return HRTIMER_RESTART;
@@ -572,10 +577,16 @@ static enum hrtimer_restart lis2dw12_hrtimer_acc_callback(struct hrtimer *timer)
 /* Events data */
 static irqreturn_t lis2dw12_thread_fn(int irq, void *private)
 {
-	u8 status;
 	struct lis2dw12_data *cdata = private;
+	u8 status;
+	int err;
 
-	cdata->tf->read(cdata, LIS2DW12_STATUS_ADDR, 1, &status, true);
+	err = cdata->tf->read(cdata, LIS2DW12_STATUS_ADDR, 1, &status, true);
+	if (err < 0) {
+		dev_err_ratelimited(cdata->dev,
+				    "failed to read interrupt status: %d\n", err);
+		return IRQ_HANDLED;
+	}
 
 	if (status & LIS2DW12_EVENT_MASK) {
 		if ((cdata->sensors[LIS2DW12_TAP].enabled) &&
@@ -652,7 +663,7 @@ static int lis2dw12_update_hw_odr(struct lis2dw12_sensor_data *sdata, int odr)
 static int lis2dw12_configure_tap_event(struct lis2dw12_sensor_data *sdata,
 				      bool single_tap)
 {
-	u8 err = 0;
+	int err = 0;
 
 	if (single_tap) {
 		err = lis2dw12_write_data_with_mask(sdata->cdata,
@@ -753,7 +764,7 @@ static int _lis2dw12_enable_sensors(struct lis2dw12_sensor_data *sdata)
 static int lis2dw12_enable_sensors(struct lis2dw12_sensor_data *sdata)
 {
 	int err = 0;
-	
+
 	if (sdata->enabled)
 		return 0;
 
@@ -779,8 +790,8 @@ static int _lis2dw12_disable_sensors(struct lis2dw12_sensor_data *sdata)
 		if (err < 0)
 			return err;
 
-		cancel_work_sync(&sdata->input_work);
 		hrtimer_cancel(&sdata->hr_timer);
+		cancel_work_sync(&sdata->input_work);
 		break;
 	case LIS2DW12_FF:
 	case LIS2DW12_TAP:
@@ -813,19 +824,41 @@ static int lis2dw12_disable_sensors(struct lis2dw12_sensor_data *sdata)
 	return err;
 }
 
-static int lis2dw12_allocate_workqueue(struct lis2dw12_data *cdata)
+static int lis2dw12_allocate_workqueue_and_interrupt(struct lis2dw12_data *cdata)
 {
-	if (!lis2dw12_workqueue)
-		lis2dw12_workqueue = create_workqueue(cdata->name);
+	int err = 0;
 
-	if (!lis2dw12_workqueue)
-		return -EINVAL;
+	if (!cdata->workqueue) {
+		cdata->workqueue =
+			alloc_workqueue("lis2dw12_workqueue-%s",
+					 WQ_UNBOUND | WQ_HIGHPRI, 0,
+					 dev_name(cdata->dev));
+	}
 
-	return devm_request_threaded_irq(cdata->dev, cdata->irq,
+	if (!cdata->workqueue) {
+		dev_err(cdata->dev, "Failed to allocate workqueue\n");
+		return -ENOMEM;
+	}
+
+	if (cdata->irq) {
+		err = devm_request_threaded_irq(cdata->dev, cdata->irq,
 					 lis2dw12_save_timestamp,
 					 lis2dw12_thread_fn,
 					 IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
 					 cdata->name, cdata);
+
+		if (err < 0) {
+			dev_err(cdata->dev, "Failed to request IRQ. irq=%d\n",
+				cdata->irq);
+
+			destroy_workqueue(cdata->workqueue);
+			cdata->workqueue = NULL;
+			return err;
+		}
+	} else {
+		dev_info(cdata->dev, "IRQ not requested. irq=%d\n", cdata->irq);
+	}
+	return err;
 }
 
 static int lis2dw12_init_sensors(struct lis2dw12_data *cdata)
@@ -1145,7 +1178,7 @@ static const struct attribute_group lis2dw12_attribute_groups[] = {
 };
 
 #ifdef CONFIG_OF
-static u32 lis2dw12_parse_dt(struct lis2dw12_data *cdata)
+static int lis2dw12_parse_dt(struct lis2dw12_data *cdata)
 {
 	u32 val;
 	struct device_node *np;
@@ -1184,11 +1217,18 @@ int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype)
 	}
 
 	if (irq > 0) {
+
+		cdata->irq = irq;
+
 #ifdef CONFIG_OF
+		dev_info(cdata->dev, "dt enabled: parsing dt info");
 		err = lis2dw12_parse_dt(cdata);
-		if (err < 0)
+		if (err < 0) {
+			dev_err(cdata->dev, "error parsing dt:%d", err);
 			return err;
+		}
 #else /* CONFIG_OF */
+		dev_info(cdata->dev, "dt not enabled: using platform data info");
 		if (cdata->dev->platform_data) {
 			cdata->drdy_int_pin = ((struct lis2dw12_platform_data *)
 				cdata->dev->platform_data)->drdy_int_pin;
@@ -1197,11 +1237,18 @@ int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype)
 				cdata->drdy_int_pin = 1;
 		} else {
 			cdata->drdy_int_pin = 1;
+			dev_info(cdata->dev,
+				"platform_data not found, assigning default drdy_int_pin");
 		}
 #endif /* CONFIG_OF */
 
 		dev_info(cdata->dev, "driver use DRDY int pin %d\n",
 			 cdata->drdy_int_pin);
+	} else {
+
+		cdata->irq = 0;
+		dev_warn(cdata->dev,
+			"IRQ not available! driver enables limited features");
 	}
 
 	cdata->power_mode = LIS2DW12_LP_MODE;
@@ -1218,12 +1265,19 @@ int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype)
 			sdata->poll_ms = 1000 / sdata->c_odr;
 		}
 
-		lis2dw12_input_init(sdata, bustype);
+		err = lis2dw12_input_init(sdata, bustype);
+		if (err < 0) {
+			dev_err(cdata->dev,
+				"failed to init input device for sensor %s: %d\n",
+				sdata->name, err);
+			goto err_init_sensors;
+		}
 
 		if (sysfs_create_group(&sdata->input_dev->dev.kobj,
 				       &lis2dw12_attribute_groups[i])) {
-			dev_err(cdata->dev, "failed to create sysfs group for sensor %s",
-					sdata->name);
+			dev_err(cdata->dev,
+				"failed to create sysfs group for sensor %s",
+				sdata->name);
 
 			input_unregister_device(sdata->input_dev);
 			sdata->input_dev = NULL;
@@ -1232,19 +1286,21 @@ int lis2dw12_common_probe(struct lis2dw12_data *cdata, int irq, u16 bustype)
 
 	err = lis2dw12_init_sensors(cdata);
 	if (err < 0)
-		return err;
+		goto err_init_sensors;
 
-	if (irq > 0) {
-		cdata->irq = irq;
-
-		err = lis2dw12_allocate_workqueue(cdata);
-		if (err)
-			return err;
-	}
+	err = lis2dw12_allocate_workqueue_and_interrupt(cdata);
+	if (err)
+		goto err_init_sensors;
 
 	dev_info(cdata->dev, "%s: probed\n", LIS2DW12_DEV_NAME);
 
 	return 0;
+
+err_init_sensors:
+	for (i = 0; i < LIS2DW12_SENSORS_NUMB; i++)
+		lis2dw12_input_cleanup(&cdata->sensors[i]);
+
+	return err;
 }
 EXPORT_SYMBOL(lis2dw12_common_probe);
 
@@ -1257,10 +1313,10 @@ void lis2dw12_common_remove(struct lis2dw12_data *cdata, int irq)
 		lis2dw12_input_cleanup(&cdata->sensors[i]);
 	}
 
-	if(lis2dw12_workqueue) {
-		flush_workqueue(lis2dw12_workqueue);
-		destroy_workqueue(lis2dw12_workqueue);
-		lis2dw12_workqueue = NULL;
+	if (cdata->workqueue) {
+		flush_workqueue(cdata->workqueue);
+		destroy_workqueue(cdata->workqueue);
+		cdata->workqueue = NULL;
 	}
 }
 EXPORT_SYMBOL(lis2dw12_common_remove);
@@ -1298,9 +1354,10 @@ int lis2dw12_common_resume(struct lis2dw12_data *cdata)
 }
 EXPORT_SYMBOL(lis2dw12_common_resume);
 
-#endif /* CONFIG_PM_SLEEP */
+#endif	/* CONFIG_PM_SLEEP */
 
 MODULE_DESCRIPTION("STMicroelectronics lis2dw12 driver");
 MODULE_AUTHOR("Giuseppe Barba");
 MODULE_AUTHOR("Mario Tesi");
+MODULE_AUTHOR("MEMS Software Solutions Team");
 MODULE_LICENSE("GPL v2");

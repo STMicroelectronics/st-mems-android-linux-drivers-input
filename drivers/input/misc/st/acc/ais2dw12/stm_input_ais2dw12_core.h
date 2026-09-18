@@ -93,6 +93,7 @@ struct ais2dw12_input_data {
 	s64 timestamp;
 	struct device *dev;
 	struct ais2dw12_input_sensor_data sensors[AIS2DW12_SENSORS_NUMB];
+	struct workqueue_struct *workqueue;
 	struct mutex bank_registers_lock;
 	const struct ais2dw12_input_transfer_function *tf;
 	struct ais2dw12_input_transfer_buffer tb;

@@ -113,6 +113,7 @@ struct lis2dw12_data {
 	s64 timestamp;
 	struct device *dev;
 	struct lis2dw12_sensor_data sensors[LIS2DW12_SENSORS_NUMB];
+	struct workqueue_struct *workqueue;
 	struct mutex bank_registers_lock;
 	const struct lis2dw12_transfer_function *tf;
 	struct lis2dw12_transfer_buffer tb;

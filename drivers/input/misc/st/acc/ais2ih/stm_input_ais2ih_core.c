@@ -180,8 +180,6 @@ enum {
 	AIS2IH_MODE_COUNT,
 };
 
-static struct workqueue_struct *ais2ih_input_workqueue;
-
 static const struct ais2ih_input_sensor_name {
 	const char *name;
 	const char *description;
@@ -386,6 +384,7 @@ static int ais2ih_input_input_init(struct ais2ih_input_sensor_data *sdata,
 	if (err) {
 		dev_err(sdata->cdata->dev, "unable to register sensor %s\n",
 			sdata->name);
+		sdata->input_dev = NULL;
 		return err;
 	}
 
@@ -580,7 +579,7 @@ hrtimer_restart ais2ih_input_hrtimer_acc_callback(struct hrtimer *timer)
 
 	sdata->timestamp = ais2ih_input_get_time_ns();
 
-	queue_work(ais2ih_input_workqueue, &sdata->input_work);
+	queue_work(sdata->cdata->workqueue, &sdata->input_work);
 
 	hrtimer_forward(timer, ktime_get(), sdata->oldktime);
 
@@ -846,12 +845,14 @@ ais2ih_input_allocate_workqueue_and_interrupt(struct ais2ih_input_data *cdata)
 {
 	int err = 0;
 
-	if (!ais2ih_input_workqueue)
-		ais2ih_input_workqueue =
-			alloc_workqueue("ais2ih_input_workqueue",
-					WQ_UNBOUND | WQ_HIGHPRI, 0);
+	if (!cdata->workqueue) {
+		cdata->workqueue =
+			alloc_workqueue("ais2ih_input_workqueue-%s",
+					 WQ_UNBOUND | WQ_HIGHPRI, 0,
+					 dev_name(cdata->dev));
+	}
 
-	if (!ais2ih_input_workqueue) {
+	if (!cdata->workqueue) {
 		dev_err(cdata->dev, "Failed to allocate workqueue\n");
 		return -ENOMEM;
 	}
@@ -866,6 +867,9 @@ ais2ih_input_allocate_workqueue_and_interrupt(struct ais2ih_input_data *cdata)
 		if (err < 0) {
 			dev_err(cdata->dev, "Failed to request IRQ. irq=%d\n",
 				cdata->irq);
+
+			destroy_workqueue(cdata->workqueue);
+			cdata->workqueue = NULL;
 			return err;
 		}
 	} else {
@@ -1225,7 +1229,7 @@ static const struct attribute_group ais2ih_input_attribute_groups[] = {
 };
 
 #if IS_ENABLED(CONFIG_OF)
-static u32 ais2ih_input_parse_dt(struct ais2ih_input_data *cdata)
+static int ais2ih_input_parse_dt(struct ais2ih_input_data *cdata)
 {
 	u32 val;
 	struct device_node *np;
@@ -1315,7 +1319,13 @@ int ais2ih_input_common_probe(struct ais2ih_input_data *cdata, int irq,
 			sdata->poll_us = 1000 * 1000 / sdata->c_odr;
 		}
 
-		ais2ih_input_input_init(sdata, bustype);
+		err = ais2ih_input_input_init(sdata, bustype);
+		if (err < 0) {
+			dev_err(cdata->dev,
+				"failed to init input device for sensor %s: %d\n",
+				sdata->name, err);
+			goto err_init_sensors;
+		}
 
 		if (sysfs_create_group(&sdata->input_dev->dev.kobj,
 				       &ais2ih_input_attribute_groups[i])) {
@@ -1330,15 +1340,21 @@ int ais2ih_input_common_probe(struct ais2ih_input_data *cdata, int irq,
 
 	err = ais2ih_input_init_sensors(cdata);
 	if (err < 0)
-		return err;
+		goto err_init_sensors;
 
 	err = ais2ih_input_allocate_workqueue_and_interrupt(cdata);
 	if (err)
-		return err;
+		goto err_init_sensors;
 
 	dev_info(cdata->dev, "%s: probed\n", AIS2IH_DEV_NAME);
 
 	return 0;
+
+err_init_sensors:
+	for (i = 0; i < AIS2IH_SENSORS_NUMB; i++)
+		ais2ih_input_input_cleanup(&cdata->sensors[i]);
+
+	return err;
 }
 EXPORT_SYMBOL(ais2ih_input_common_probe);
 
@@ -1351,10 +1367,10 @@ void ais2ih_input_common_remove(struct ais2ih_input_data *cdata, int irq)
 		ais2ih_input_input_cleanup(&cdata->sensors[i]);
 	}
 
-	if (ais2ih_input_workqueue) {
-		flush_workqueue(ais2ih_input_workqueue);
-		destroy_workqueue(ais2ih_input_workqueue);
-		ais2ih_input_workqueue = NULL;
+	if (cdata->workqueue) {
+		flush_workqueue(cdata->workqueue);
+		destroy_workqueue(cdata->workqueue);
+		cdata->workqueue = NULL;
 	}
 }
 EXPORT_SYMBOL(ais2ih_input_common_remove);
