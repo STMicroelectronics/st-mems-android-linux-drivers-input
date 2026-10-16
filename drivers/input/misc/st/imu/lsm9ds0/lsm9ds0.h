@@ -32,6 +32,8 @@
 #ifndef	__LSM9DS0_H__
 #define	__LSM9DS0_H__
 
+#include <linux/kconfig.h>
+
 #define	LSM9DS0_DEV_NAME	"lsm9ds0_acc_mag"
 #define	LSM9DS0_ACC_DEV_NAME	"lsm9ds0_acc"
 #define	LSM9DS0_MAG_DEV_NAME	"lsm9ds0_mag"
@@ -144,10 +146,9 @@ struct lsm9ds0_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_LSM9DS0_SPI) || \
-    defined(CONFIG_INPUT_LSM9DS0_SPI_MODULE)
-#define LSM9DS0_RX_MAX_LENGTH		500
-#define LSM9DS0_TX_MAX_LENGTH		500
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS0_SPI)
+#define LSM9DS0_RX_MAX_LENGTH		(500)
+#define LSM9DS0_TX_MAX_LENGTH		(500 + 1)
 
 struct lsm9ds0_transfer_buffer {
 	u8 rx_buf[LSM9DS0_RX_MAX_LENGTH];
@@ -201,8 +202,7 @@ struct lsm9ds0_dev {
 	struct work_struct irq2_work;
 	struct workqueue_struct *irq2_work_queue;
 	struct lsm9ds0_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM9DS0_SPI) || \
-    defined(CONFIG_INPUT_LSM9DS0_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS0_SPI)
 	struct lsm9ds0_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM9DS0_SPI */
 };
@@ -278,8 +278,7 @@ struct lsm9ds0_gyr_dev {
 	struct workqueue_struct *gyr_workqueue;
 
 	struct lsm9ds0_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM9DS0_SPI) || \
-    defined(CONFIG_INPUT_LSM9DS0_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS0_SPI)
 	struct lsm9ds0_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM9DS0_SPI */
 };

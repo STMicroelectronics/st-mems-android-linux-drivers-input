@@ -28,6 +28,8 @@
 #ifndef __AIS3624DQ_H__
 #define __AIS3624DQ_H__
 
+#include <linux/kconfig.h>
+
 #define	AIS3624DQ_ACC_DEV_NAME	"ais3624dq_acc"
 
 #define	AIS3624DQ_ACC_MIN_POLL_PERIOD_MS 1
@@ -56,8 +58,7 @@
 
 #ifdef __KERNEL__
 
-#if defined(CONFIG_INPUT_AIS3624DQ_SPI) || \
-    defined(CONFIG_INPUT_AIS3624DQ_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_AIS3624DQ_SPI)
 #define AIS3624DQ_RX_MAX_LENGTH	500
 #define AIS3624DQ_TX_MAX_LENGTH	500
 
@@ -129,8 +130,7 @@ struct ais3624dq_acc_data {
 #ifdef AIS3624DQ_DEBUG
 	u8 reg_addr;
 #endif
-#if defined(CONFIG_INPUT_AIS3624DQ_SPI) || \
-    defined(CONFIG_INPUT_AIS3624DQ_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_AIS3624DQ_SPI)
 	struct ais3624dq_transfer_buffer tb;
 #endif
 	struct ais3624dq_transfer_function *tf;

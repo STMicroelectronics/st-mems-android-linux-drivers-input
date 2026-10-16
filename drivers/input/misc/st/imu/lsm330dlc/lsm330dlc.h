@@ -39,6 +39,7 @@ Version History.
 #ifndef	__LSM330DLC_H__
 #define	__LSM330DLC_H__
 
+#include <linux/kconfig.h>
 
 #define	LSM330DLC_ACC_DEV_NAME	"lsm330dlc_acc"
 #define LSM330DLC_GYR_DEV_NAME	"lsm330dlc_gyr"
@@ -59,8 +60,7 @@ struct lsm330dlc_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_LSM330DLC_SPI) || \
-    defined(CONFIG_INPUT_LSM330DLC_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM330DLC_SPI)
 #define LSM330DLC_RX_MAX_LENGTH		500
 #define LSM330DLC_TX_MAX_LENGTH		500
 
@@ -99,8 +99,7 @@ struct lsm330dlc_acc_dev {
 	const struct lsm330dlc_transfer_function *tf;
 
 	struct lsm330dlc_acc_platform_data *pdata;
-#if defined(CONFIG_INPUT_LSM330DLC_SPI) || \
-    defined(CONFIG_INPUT_LSM330DLC_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM330DLC_SPI)
 	struct lsm330dlc_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM330DLC_SPI */
 
@@ -137,8 +136,7 @@ struct lsm330dlc_gyr_dev {
 	u8 fifomode;
 
 	const struct lsm330dlc_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM330DLC_SPI) || \
-    defined(CONFIG_INPUT_LSM330DLC_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM330DLC_SPI)
 	struct lsm330dlc_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM330DLC_SPI */
 };

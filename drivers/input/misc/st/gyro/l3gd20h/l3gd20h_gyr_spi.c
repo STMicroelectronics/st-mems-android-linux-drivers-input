@@ -27,19 +27,25 @@ static int l3gd20h_gyr_spi_read(struct device *device, u8 addr, int len,
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(device);
 	struct l3gd20h_gyr_status *stat = spi_get_drvdata(spi);
+	struct spi_transfer xfers[2] = { };
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = stat->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = stat->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	if (!data) {
+		dev_err(stat->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > L3GD20H_RX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = stat->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+
+	xfers[1].rx_buf = stat->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	if (len > 1)
 		addr |= SPI_AUTO_INCREMENT;
@@ -66,15 +72,21 @@ static int l3gd20h_gyr_spi_write(struct device *device, u8 addr, int len,
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(device);
 	struct l3gd20h_gyr_status *stat = spi_get_drvdata(spi);
+	struct spi_transfer xfers = { };
 
-	struct spi_transfer xfers = {
-		.tx_buf = stat->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	if (!data) {
+		dev_err(stat->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	if (len >= L3GD20H_TX_MAX_LENGTH)
-		return -ENOMEM;
+	if (len <= 0 || len >= L3GD20H_TX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = stat->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	if (len > 1)
 		addr |= SPI_AUTO_INCREMENT;

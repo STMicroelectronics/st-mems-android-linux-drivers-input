@@ -27,6 +27,8 @@
 #ifndef __AIS328DQ_H__
 #define __AIS328DQ_H__
 
+#include <linux/kconfig.h>
+
 #define AIS328DQ_ACC_I2C_SAD_L		(0x18)
 #define AIS328DQ_ACC_I2C_SAD_H		(0x19)
 #define	AIS328DQ_ACC_DEV_NAME	"ais328dq_acc"
@@ -51,8 +53,7 @@
 
 #ifdef __KERNEL__
 
-#if defined(CONFIG_INPUT_AIS328DQ_SPI) || \
-    defined(CONFIG_INPUT_AIS328DQ_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_AIS328DQ_SPI)
 #define AIS328DQ_RX_MAX_LENGTH	500
 #define AIS328DQ_TX_MAX_LENGTH	500
 
@@ -129,8 +130,7 @@ struct ais328dq_acc_data {
 #ifdef AIS328DQ_DEBUG
 	u8 reg_addr;
 #endif
-#if defined(CONFIG_INPUT_AIS328DQ_SPI) || \
-    defined(CONFIG_INPUT_AIS328DQ_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_AIS328DQ_SPI)
 	struct ais328dq_transfer_buffer tb;
 #endif
 	struct ais328dq_transfer_function *tf;

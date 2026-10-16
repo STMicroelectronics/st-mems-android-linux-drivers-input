@@ -59,6 +59,7 @@ INPUT subsystem: NOTE-> output data INCLUDE the sensitivity in accelerometer,
 #ifndef __LSM330_H__
 #define __LSM330_H__
 
+#include <linux/kconfig.h>
 
 #define LSM330_ACC_DEV_NAME		"lsm330_acc"
 #define LSM330_GYR_DEV_NAME		"lsm330_gyr"
@@ -133,8 +134,7 @@ struct lsm330_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_LSM330_SPI) || \
-    defined(CONFIG_INPUT_LSM330_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM330_SPI)
 #define LSM330_RX_MAX_LENGTH		500
 #define LSM330_TX_MAX_LENGTH		500
 
@@ -216,8 +216,7 @@ struct lsm330_acc_data {
 	u8 reg_addr;
 #endif
 	struct lsm330_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM330_SPI) || \
-    defined(CONFIG_INPUT_LSM330_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM330_SPI)
 	struct lsm330_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM330_SPI */
 };
@@ -292,8 +291,7 @@ struct lsm330_gyr_status {
 	struct work_struct polling_task;
 
 	struct lsm330_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM330_SPI) || \
-    defined(CONFIG_INPUT_LSM330_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM330_SPI)
 	struct lsm330_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM330_SPI */
 };

@@ -32,19 +32,25 @@ static int lis3mdl_spi_read(struct device *device, u8 addr, int len, u8 *data)
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(device);
 	struct lis3mdl_dev *dev = spi_get_drvdata(spi);
+	struct spi_transfer xfers[2] = { };
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = dev->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = dev->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	if (!data) {
+		dev_err(dev->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LIS3MDL_RX_MAX_LENGTH) {
+		dev_err(dev->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = dev->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+
+	xfers[1].rx_buf = dev->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	if (len > 1)
 		addr |= SPI_AUTO_INCREMENT;
@@ -70,15 +76,21 @@ static int lis3mdl_spi_write(struct device *device, u8 addr, int len, u8 *data)
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(device);
 	struct lis3mdl_dev *dev = spi_get_drvdata(spi);
+	struct spi_transfer xfers = { };
 
-	struct spi_transfer xfers = {
-		.tx_buf = dev->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	if (!data) {
+		dev_err(device, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	if (len >= LIS3MDL_TX_MAX_LENGTH)
-		return -ENOMEM;
+	if (len <= 0 || len >= LIS3MDL_TX_MAX_LENGTH) {
+		dev_err(device, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = dev->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	if (len > 1)
 		addr |= SPI_AUTO_INCREMENT;
@@ -211,7 +223,7 @@ static struct spi_driver lis3mdl_spi_driver = {
 
 module_spi_driver(lis3mdl_spi_driver);
 
-MODULE_DESCRIPTION("lis3mdl i2c driver");
+MODULE_DESCRIPTION("lis3mdl spi driver");
 MODULE_AUTHOR("Lorenzo Bianconi <lorenzo.bianconi@st.com>");
 MODULE_LICENSE("GPL v2");
 

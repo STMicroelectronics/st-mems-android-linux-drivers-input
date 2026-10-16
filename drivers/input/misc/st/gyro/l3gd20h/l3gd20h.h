@@ -57,6 +57,8 @@
 #ifndef __L3GD20H_GYR_H__
 #define __L3GD20H_GYR_H__
 
+#include <linux/kconfig.h>
+
 #define L3GD20H_GYR_DEV_NAME		"l3gd20h_gyr"
 
 #define L3GD20H_GYR_ENABLED		1
@@ -78,8 +80,7 @@ struct l3gd20h_gyr_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_L3GD20H_SPI) || \
-    defined(CONFIG_INPUT_L3GD20H_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_L3GD20H_SPI)
 #define L3GD20H_RX_MAX_LENGTH		500
 #define L3GD20H_TX_MAX_LENGTH		500
 
@@ -149,8 +150,7 @@ struct l3gd20h_gyr_status {
 	struct work_struct polling_task;
 
 	struct l3gd20h_gyr_transfer_function *tf;
-#if defined(CONFIG_INPUT_L3GD20H_SPI) || \
-    defined(CONFIG_INPUT_L3GD20H_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_L3GD20H_SPI)
 	struct l3gd20h_gyr_transfer_buffer tb;
 #endif /* CONFIG_INPUT_L3GD20H_SPI */
 };

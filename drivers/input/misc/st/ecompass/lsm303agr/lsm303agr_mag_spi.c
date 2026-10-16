@@ -33,19 +33,25 @@ static int lsm303agr_mag_spi_read(struct device *dev, u8 reg_addr, int len,
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(dev);
 	struct lsm303agr_common_data *cdata = spi_get_drvdata(spi);
+	struct spi_transfer xfers[2] = { };
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = cdata->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = cdata->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LSM303AGR_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = cdata->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+
+	xfers[1].rx_buf = cdata->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	if (len > 1)
 		reg_addr |= SPI_AUTO_INCREMENT;
@@ -72,15 +78,21 @@ static int lsm303agr_mag_spi_write(struct device *dev, u8 reg_addr, int len,
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(dev);
 	struct lsm303agr_common_data *cdata = spi_get_drvdata(spi);
+	struct spi_transfer xfers = { };
 
-	struct spi_transfer xfers = {
-		.tx_buf = cdata->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	if (len >= LSM303AGR_TX_MAX_LENGTH)
-		return -ENOMEM;
+	if (len <= 0 || len >= LSM303AGR_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = cdata->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	if (len > 1)
 		reg_addr |= SPI_AUTO_INCREMENT;

@@ -12,6 +12,7 @@
 #ifndef _HTS221_H_
 #define _HTS221_H_
 
+#include <linux/kconfig.h>
 #include <linux/device.h>
 #include <linux/module.h>
 
@@ -23,8 +24,7 @@
 #define INPUT_EVENT_TIME_MSB		MSC_SCAN
 #define INPUT_EVENT_TIME_LSB		MSC_MAX
 
-#if defined(CONFIG_INPUT_HTS221_SPI) || \
-    defined(CONFIG_INPUT_HTS221_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_HTS221_SPI)
 #define HTS221_RX_MAX_LENGTH		500
 #define HTS221_TX_MAX_LENGTH		500
 
@@ -59,8 +59,7 @@ struct hts221_dev {
 	struct input_dev *input_dev;
 	struct delayed_work input_work;
 	const struct hts221_transfer_function *tf;
-#if defined(CONFIG_INPUT_HTS221_SPI) || \
-    defined(CONFIG_INPUT_HTS221_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_HTS221_SPI)
 	struct hts221_transfer_buffer tb;
 #endif /* CONFIG_INPUT_HTS221_SPI */
 

@@ -28,6 +28,8 @@
 #ifndef	__LSM303D_H__
 #define	__LSM303D_H__
 
+#include <linux/kconfig.h>
+
 #define	LSM303D_DEV_NAME	"lsm303d"
 #define	LSM303D_ACC_DEV_NAME	"lsm303d_acc"	/* Input file name */
 #define	LSM303D_MAG_DEV_NAME	"lsm303d_mag"	/* Input file name */
@@ -148,8 +150,7 @@ struct lsm303d_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_LSM303D_SPI) || \
-    defined(CONFIG_INPUT_LSM303D_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM303D_SPI)
 #define LSM303D_RX_MAX_LENGTH		500
 #define LSM303D_TX_MAX_LENGTH		500
 
@@ -168,8 +169,7 @@ struct lsm303d_dev {
 	struct device *dev;
 	struct lsm303d_transfer_function *tf;
 	struct lsm303d_status st;
-#if defined(CONFIG_INPUT_LSM303D_SPI) || \
-    defined(CONFIG_INPUT_LSM303D_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM303D_SPI)
 	struct lsm303d_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM303D_SPI */
 };

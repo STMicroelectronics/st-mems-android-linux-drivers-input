@@ -28,6 +28,7 @@
 #ifndef __LIS3MDL_H__
 #define __LIS3MDL_H__
 
+#include <linux/kconfig.h>
 #include <linux/module.h>
 #include <linux/version.h>
 
@@ -36,8 +37,7 @@ struct lis3mdl_transfer_function {
 	int (*read) (struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_LIS3MDL_SPI) || \
-    defined(CONFIG_INPUT_LIS3MDL_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LIS3MDL_SPI)
 #define LIS3MDL_RX_MAX_LENGTH		500
 #define LIS3MDL_TX_MAX_LENGTH		500
 
@@ -70,8 +70,7 @@ struct lis3mdl_dev {
 	u8 fs_range;
 
 	const struct lis3mdl_transfer_function *tf;
-#if defined(CONFIG_INPUT_LIS3MDL_SPI) || \
-    defined(CONFIG_INPUT_LIS3MDL_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LIS3MDL_SPI)
 	struct lis3mdl_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LIS3MDL_SPI */
 };

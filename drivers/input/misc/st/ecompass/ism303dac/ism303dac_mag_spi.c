@@ -34,19 +34,25 @@ static int ism303dac_mag_spi_read(struct st_common_data *cdata,
 	int err;
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(cdata->dev);
+	struct spi_transfer xfers[2] = { };
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = cdata->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = cdata->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > ISM303DAC_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = cdata->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+
+	xfers[1].rx_buf = cdata->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	cdata->tb.tx_buf[0] = addr | SENSORS_SPI_READ;
 
@@ -69,15 +75,21 @@ static int ism303dac_mag_spi_write(struct st_common_data *cdata,
 {
 	struct spi_message msg;
 	struct spi_device *spi = to_spi_device(cdata->dev);
+	struct spi_transfer xfers = { };
 
-	struct spi_transfer xfers = {
-		.tx_buf = cdata->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	if (len >= ISM303DAC_TX_MAX_LENGTH)
-		return -ENOMEM;
+	if (len <= 0 || len >= ISM303DAC_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = cdata->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	cdata->tb.tx_buf[0] = addr;
 

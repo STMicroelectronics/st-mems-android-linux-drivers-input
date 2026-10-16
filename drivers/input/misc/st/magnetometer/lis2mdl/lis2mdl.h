@@ -13,6 +13,7 @@
 #ifndef DRIVERS_INPUT_MISC_LIS2MDL_CORE_H_
 #define DRIVERS_INPUT_MISC_LIS2MDL_CORE_H_
 
+#include <linux/kconfig.h>
 #include <linux/types.h>
 
 #define LIS2MDL_OUT_XYZ_SIZE		8

@@ -29,6 +29,8 @@
 #ifndef __LSM9DS1_H__
 #define __LSM9DS1_H__
 
+#include <linux/kconfig.h>
+
 #define LSM9DS1_ACC_GYR_DEV_NAME	"lsm9ds1_acc_gyr"
 #define LSM9DS1_MAG_DEV_NAME		"lsm9ds1_mag"
 #define LSM9DS1_ACC_DEV_NAME		"lsm9ds1_acc"
@@ -127,8 +129,7 @@
 #define INPUT_EVENT_TIME_LSB		MSC_MAX
 
 
-#if defined(CONFIG_INPUT_LSM9DS1_SPI) || \
-    defined(CONFIG_INPUT_LSM9DS1_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS1_SPI)
 #define LSM9DS1_RX_MAX_LENGTH		500
 #define LSM9DS1_TX_MAX_LENGTH		500
 
@@ -136,7 +137,7 @@ struct lsm9ds1_transfer_buffer {
 	u8 rx_buf[LSM9DS1_RX_MAX_LENGTH];
 	u8 tx_buf[LSM9DS1_TX_MAX_LENGTH] ____cacheline_aligned;
 };
-#endif /* CONFIG_INPUT_LSMDS1_SPI */
+#endif /* CONFIG_INPUT_LSM9DS1_SPI */
 
 struct lsm9ds1_transfer_function {
 	int (*write)(struct device *dev, u8 addr, int len, u8 *data);
@@ -186,8 +187,7 @@ struct lsm9ds1_mag_dev {
 	u8 xy_mode;
 	u8 z_mode;
 	struct lsm9ds1_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM9DS1_SPI) || \
-    defined(CONFIG_INPUT_LSM9DS1_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS1_SPI)
 	struct lsm9ds1_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSMDS1_SPI */
 };
@@ -249,10 +249,9 @@ struct lsm9ds1_acc_gyr_dev {
 	int32_t sensitivity_gyr;
 
 	struct lsm9ds1_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM9DS1_SPI) || \
-    defined(CONFIG_INPUT_LSM9DS1_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS1_SPI)
 	struct lsm9ds1_transfer_buffer tb;
-#endif /* CONFIG_INPUT_LSMDS1_SPI */
+#endif /* CONFIG_INPUT_LSM9DS1_SPI */
 };
 
 struct lsm9ds1_acc_gyr_main_platform_data {

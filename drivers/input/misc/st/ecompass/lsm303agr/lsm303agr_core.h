@@ -14,6 +14,8 @@
 
 #ifdef __KERNEL__
 
+#include <linux/kconfig.h>
+
 #define LSM303AGR_MAX_SENSORS_NUM	1
 #define LSM303AGR_ACC_SENSOR		0 /* only this sensor */
 #define LSM303AGR_MAG_SENSOR		0 /* only this sensor */
@@ -26,8 +28,7 @@ struct lsm303agr_transfer_function {
 	int (*read) (struct device *dev, u8 reg_addr, int len, u8 *data);
 };
 
-#if defined(CONFIG_INPUT_LSM303AGR_SPI) || \
-    defined(CONFIG_INPUT_LSM303AGR_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM303AGR_SPI)
 #define LSM303AGR_RX_MAX_LENGTH		500
 #define LSM303AGR_TX_MAX_LENGTH		500
 
@@ -69,8 +70,7 @@ struct lsm303agr_common_data {
 	u16 bus_type;
 	struct lsm303agr_sensor_data sensors[LSM303AGR_MAX_SENSORS_NUM];
 	const struct lsm303agr_transfer_function *tf;
-#if defined(CONFIG_INPUT_LSM303AGR_SPI) || \
-    defined(CONFIG_INPUT_LSM303AGR_SPI_MODULE)
+#if IS_ENABLED(CONFIG_INPUT_LSM303AGR_SPI)
 	struct lsm303agr_transfer_buffer tb;
 #endif /* CONFIG_INPUT_LSM303AGR_SPI */
 };
@@ -100,6 +100,5 @@ int lsm303agr_mag_disable(struct lsm303agr_common_data *cdata);
 
 #endif /* __KERNEL__ */
 #endif	/* __LSM303AGR_H__ */
-
 
 
