@@ -42,18 +42,24 @@ static int lis3dsh_spi_read(struct lis3dsh_status *stat, u8 reg_addr, int len,
 {
 	int err;
 	struct spi_message msg;
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = stat->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = stat->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	struct spi_transfer xfers[2] = { };
+
+	if (!data) {
+		dev_err(stat->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > BUFF_RX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = stat->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+	xfers[1].rx_buf = stat->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	mutex_lock(&stat->tb.buf_lock);
 	stat->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ;
@@ -63,15 +69,9 @@ static int lis3dsh_spi_read(struct lis3dsh_status *stat, u8 reg_addr, int len,
 	spi_message_add_tail(&xfers[1], &msg);
 
 	err = spi_sync(to_spi_device(stat->dev), &msg);
-	if (err)
-		goto acc_spi_read_error;
+	if (!err)
+		memcpy(data, stat->tb.rx_buf, len*sizeof(u8));
 
-	memcpy(data, stat->tb.rx_buf, len*sizeof(u8));
-	mutex_unlock(&stat->tb.buf_lock);
-
-	return len;
-
-acc_spi_read_error:
 	mutex_unlock(&stat->tb.buf_lock);
 
 	return err;
@@ -82,14 +82,21 @@ static int lis3dsh_spi_write(struct lis3dsh_status *stat, u8 reg_addr, int len,
 {
 	int err;
 	struct spi_message msg;
-	struct spi_transfer xfers = {
-		.tx_buf = stat->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	struct spi_transfer xfers = { };
 
-	if (len >= BUFF_RX_MAX_LENGTH)
-		return -ENOMEM;
+	if (!data) {
+		dev_err(stat->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= BUFF_TX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = stat->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	mutex_lock(&stat->tb.buf_lock);
 	stat->tb.tx_buf[0] = reg_addr;

@@ -28,18 +28,24 @@ static int lsm6dsl_spi_read(struct lsm6dsl_data *cdata, u8 reg_addr, int len,
 	int err;
 	struct spi_message msg;
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = cdata->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = cdata->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	struct spi_transfer xfers[2] = { };
+
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LSM6DSL_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = cdata->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+	xfers[1].rx_buf = cdata->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);
@@ -52,17 +58,9 @@ static int lsm6dsl_spi_read(struct lsm6dsl_data *cdata, u8 reg_addr, int len,
 	spi_message_add_tail(&xfers[1], &msg);
 
 	err = spi_sync(to_spi_device(cdata->dev), &msg);
-	if (err)
-		goto acc_spi_read_error;
+	if (!err)
+		memcpy(data, cdata->tb.rx_buf, len*sizeof(u8));
 
-	memcpy(data, cdata->tb.rx_buf, len*sizeof(u8));
-	mutex_unlock(&cdata->tb.buf_lock);
-	if (b_lock)
-		mutex_unlock(&cdata->bank_registers_lock);
-
-	return len;
-
-acc_spi_read_error:
 	mutex_unlock(&cdata->tb.buf_lock);
 	if (b_lock)
 		mutex_unlock(&cdata->bank_registers_lock);
@@ -76,14 +74,21 @@ static int lsm6dsl_spi_write(struct lsm6dsl_data *cdata, u8 reg_addr, int len,
 	int err;
 	struct spi_message msg;
 
-	struct spi_transfer xfers = {
-		.tx_buf = cdata->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	struct spi_transfer xfers = { };
 
-	if (len >= LSM6DSL_RX_MAX_LENGTH)
-		return -ENOMEM;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= LSM6DSL_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = cdata->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	if (b_lock)
 		mutex_lock(&cdata->bank_registers_lock);

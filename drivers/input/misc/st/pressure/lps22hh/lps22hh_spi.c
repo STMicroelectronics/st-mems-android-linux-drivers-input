@@ -34,18 +34,24 @@ static int lps22hh_spi_read(struct lps22hh_data *cdata, u8 reg_addr, int len,
 	int err;
 	struct spi_message msg;
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = cdata->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = cdata->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	struct spi_transfer xfers[2] = { };
+
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LPS22HH_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = cdata->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+	xfers[1].rx_buf = cdata->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	mutex_lock(&cdata->tb.buf_lock);
 	cdata->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ;
@@ -69,14 +75,21 @@ static int lps22hh_spi_write(struct lps22hh_data *cdata, u8 reg_addr, int len,
 	int err;
 	struct spi_message msg;
 
-	struct spi_transfer xfers = {
-		.tx_buf = cdata->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	struct spi_transfer xfers = { };
 
-	if (len >= LPS22HH_RX_MAX_LENGTH)
-		return -ENOMEM;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= LPS22HH_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = cdata->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	mutex_lock(&cdata->tb.buf_lock);
 	cdata->tb.tx_buf[0] = reg_addr;
