@@ -186,7 +186,9 @@ static int lis3de_resume(struct device *dev)
 	return lis3de_common_resume(stat);
 }
 
-static SIMPLE_DEV_PM_OPS(lis3de_pm_ops, lis3de_suspend, lis3de_resume);
+static SIMPLE_DEV_PM_OPS(lis3de_pm_ops,
+				lis3de_suspend,
+				lis3de_resume);
 
 #define LIS3DE_PM_OPS	(&lis3de_pm_ops)
 #else /* CONFIG_PM_SLEEP */

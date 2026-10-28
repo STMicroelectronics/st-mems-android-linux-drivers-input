@@ -3,9 +3,9 @@
 *
 * File Name	: lis2dh_i2c.c
 * Authors	: AMS - Motion Mems Division - Application Team - Application Team
-*		     : Giuseppe Barba <giuseppe.barba@st.com>
-*		     : Mario Tesi <mario.tesi@st.com>
-*		     : Author is willing to be considered the contact and update
+*		: Giuseppe Barba <giuseppe.barba@st.com>
+*		: Mario Tesi <mario.tesi@st.com>
+*		: Author is willing to be considered the contact and update
 * Version	: V.1.0.14
 * Date		: 2016/Apr/26
 *

@@ -161,7 +161,6 @@ Version History.
 #define	TAP_TLAT_MASK		NO_MASK
 #define	TAP_TW_MASK		NO_MASK
 
-
 /* TAP_SOURCE_REG BIT */
 #define	DTAP			0x20
 #define	STAP			0x10
@@ -347,7 +346,6 @@ static int lis2de_acc_device_power_on(struct lis2de_acc_status *stat)
 		err = lis2de_acc_hw_init(stat);
 		if (stat->hw_working == 1 && err < 0) {
 			lis2de_acc_device_power_off(stat);
-
 			return err;
 		}
 	}
@@ -355,6 +353,7 @@ static int lis2de_acc_device_power_on(struct lis2de_acc_status *stat)
 	if (stat->hw_initialized) {
 		if (stat->pdata->gpio_int1 >= 0)
 			enable_irq(stat->irq1);
+
 		if (stat->pdata->gpio_int2 >= 0)
 			enable_irq(stat->irq2);
 	}
@@ -535,7 +534,7 @@ static int lis2de_acc_get_acceleration_data(struct lis2de_acc_status *stat,
 	return err;
 }
 
-/* Input events chenged to EV_MSC */
+/* Input events changed to EV_MSC */
 static void lis2de_acc_report_values(struct lis2de_acc_status *stat, int *xyz)
 {
 	input_event(stat->input_dev, INPUT_EVENT_TYPE, INPUT_EVENT_X, xyz[0]);
@@ -594,7 +593,7 @@ static ssize_t read_single_reg(struct device *dev, char *buf, u8 reg)
 }
 
 static int write_reg(struct device *dev, const char *buf, u8 reg,
-		     u8 mask, int resumeIndex)
+		     u8 mask, int resume_index)
 {
 	int err = -1;
 	struct lis2de_acc_status *stat = dev_get_drvdata(dev);
@@ -608,9 +607,12 @@ static int write_reg(struct device *dev, const char *buf, u8 reg,
 	new_val = ((u8) val & mask);
 	x[0] = reg;
 	x[1] = new_val;
+
 	err = lis2de_acc_register_write(stat, x, reg, new_val);
-	if (err >= 0)
-		stat->resume_state[resumeIndex] = new_val;
+	if (err < 0)
+		return err;
+
+	stat->resume_state[resume_index] = new_val;
 
 	return err;
 }
@@ -1074,7 +1076,7 @@ int lis2de_acc_probe(struct lis2de_acc_status *stat)
 	}
 
 	mutex_lock(&stat->lock);
-	
+
 	stat->hw_working = 1;
 	stat->pdata = devm_kzalloc(stat->dev,
 			sizeof(*stat->pdata), GFP_KERNEL);
@@ -1231,7 +1233,7 @@ err_pdata_init:
 		stat->pdata->exit();
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
-	pr_err("%s: Driver Init failed\n", LIS2DE_ACC_DEV_NAME);
+	pr_err("%s: Driver probe failed\n", LIS2DE_ACC_DEV_NAME);
 
 	return err;
 }

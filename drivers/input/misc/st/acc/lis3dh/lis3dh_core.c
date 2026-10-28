@@ -160,7 +160,6 @@ Version History.
 #define	TAP_TLAT_MASK		NO_MASK
 #define	TAP_TW_MASK		NO_MASK
 
-
 /* TAP_SOURCE_REG BIT */
 #define	DTAP			0x20
 #define	STAP			0x10
@@ -330,7 +329,6 @@ static int lis3dh_acc_device_power_on(struct lis3dh_acc_status *stat)
 		err = lis3dh_acc_hw_init(stat);
 		if (stat->hw_working == 1 && err < 0) {
 			lis3dh_acc_device_power_off(stat);
-
 			return err;
 		}
 	}
@@ -530,7 +528,7 @@ static ssize_t read_single_reg(struct device *dev, char *buf, u8 reg)
 }
 
 static int write_reg(struct device *dev, const char *buf, u8 reg,
-		     u8 mask, int resumeIndex)
+		     u8 mask, int resume_index)
 {
 	int err = -1;
 	struct lis3dh_acc_status *stat = dev_get_drvdata(dev);
@@ -544,9 +542,12 @@ static int write_reg(struct device *dev, const char *buf, u8 reg,
 	new_val = ((u8) val & mask);
 	x[0] = reg;
 	x[1] = new_val;
+
 	err = lis3dh_acc_register_write(stat, x, reg, new_val);
-	if (err >= 0)
-		stat->resume_state[resumeIndex] = new_val;
+	if (err < 0)
+		return err;
+
+	stat->resume_state[resume_index] = new_val;
 
 	return err;
 }
@@ -1010,7 +1011,7 @@ int lis3dh_acc_probe(struct lis3dh_acc_status *stat, int irq)
 	}
 
 	mutex_lock(&stat->lock);
-	
+
 	stat->hw_working = 1;
 	stat->pdata = devm_kzalloc(stat->dev,
 			sizeof(*stat->pdata), GFP_KERNEL);
@@ -1119,7 +1120,7 @@ err_pdata_init:
 		stat->pdata->exit();
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
-	pr_err("%s: Driver Init failed\n", LIS3DH_ACC_DEV_NAME);
+	pr_err("%s: Driver probe failed\n", LIS3DH_ACC_DEV_NAME);
 
 	return err;
 }
@@ -1130,6 +1131,7 @@ int lis3dh_acc_remove(struct lis3dh_acc_status *stat)
 	dev_info(stat->dev, "driver removing\n");
 
 	lis3dh_acc_disable(stat);
+
 	lis3dh_acc_input_cleanup(stat);
 
 	remove_sysfs_interfaces(stat->dev);

@@ -68,7 +68,6 @@ Version History.
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
-#include <linux/version.h>
 
 #include "lis2dh.h"
 
@@ -158,7 +157,6 @@ Version History.
 #define	TAP_TLIM_MASK		0x7F
 #define	TAP_TLAT_MASK		NO_MASK
 #define	TAP_TW_MASK		NO_MASK
-
 
 /* TAP_SOURCE_REG BIT */
 #define	DTAP			0x20
@@ -311,7 +309,6 @@ static int lis2dh_acc_device_power_on(struct lis2dh_acc_status *stat)
 		err = lis2dh_acc_hw_init(stat);
 		if (stat->hw_working == 1 && err < 0) {
 			lis2dh_acc_device_power_off(stat);
-
 			return err;
 		}
 	}
@@ -469,7 +466,7 @@ static int lis2dh_acc_get_acceleration_data(struct lis2dh_acc_status *stat,
 	return err;
 }
 
-/* Input events chenged to EV_MSC */
+/* Input events changed to EV_MSC */
 static void lis2dh_acc_report_values(struct lis2dh_acc_status *stat,
 				     int *xyz)
 {
@@ -491,6 +488,7 @@ static int lis2dh_acc_enable(struct lis2dh_acc_status *stat)
 		err = lis2dh_acc_device_power_on(stat);
 		if (err < 0) {
 			atomic_set(&stat->enabled, 0);
+
 			return err;
 		}
 
@@ -528,7 +526,7 @@ static ssize_t read_single_reg(struct device *dev, char *buf, u8 reg)
 }
 
 static int write_reg(struct device *dev, const char *buf, u8 reg,
-		     u8 mask, int resumeIndex)
+		     u8 mask, int resume_index)
 {
 	int err = -1;
 	struct lis2dh_acc_status *stat = dev_get_drvdata(dev);
@@ -542,9 +540,12 @@ static int write_reg(struct device *dev, const char *buf, u8 reg,
 	new_val = ((u8) val & mask);
 	x[0] = reg;
 	x[1] = new_val;
+
 	err = lis2dh_acc_register_write(stat, x, reg, new_val);
-	if (err >= 0)
-		stat->resume_state[resumeIndex] = new_val;
+	if (err < 0)
+		return err;
+
+	stat->resume_state[resume_index] = new_val;
 
 	return err;
 }
@@ -1009,7 +1010,7 @@ int lis2dh_acc_probe(struct lis2dh_acc_status *stat)
 	}
 
 	mutex_lock(&stat->lock);
-	
+
 	stat->hw_working = 1;
 	stat->pdata = devm_kzalloc(stat->dev,
 			sizeof(*stat->pdata), GFP_KERNEL);
@@ -1036,6 +1037,7 @@ int lis2dh_acc_probe(struct lis2dh_acc_status *stat)
 	}
 
 	memset(stat->resume_state, 0, ARRAY_SIZE(stat->resume_state));
+
 	stat->resume_state[RES_CTRL_REG1] = (ALL_ZEROES |
 					     LIS2DH_ACC_ENABLE_ALL_AXES);
 	stat->resume_state[RES_CTRL_REG4] = (ALL_ZEROES | CTRL_REG4_BDU_ENABLE);
@@ -1108,7 +1110,7 @@ err_power_off:
 	lis2dh_acc_device_power_off(stat);
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
-	pr_err("%s: Driver Init failed\n", LIS2DH_ACC_DEV_NAME);
+	pr_err("%s: Driver probe failed\n", LIS2DH_ACC_DEV_NAME);
 
 	return err;
 }
@@ -1127,6 +1129,7 @@ int lis2dh_acc_remove(struct lis2dh_acc_status *stat)
 	}
 
 	lis2dh_acc_input_cleanup(stat);
+
 	remove_sysfs_interfaces(stat->dev);
 
 	return 0;

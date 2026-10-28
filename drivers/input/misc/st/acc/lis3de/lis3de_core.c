@@ -171,6 +171,7 @@
 #define	RES_TEMP_CFG_REG	14
 #define	RES_REFERENCE_REG	15
 #define	RES_FIFO_CTRL_REG	16
+
 /* end RESUME STATE INDICES */
 
 struct {
@@ -306,6 +307,7 @@ static void lis3de_device_power_off(struct lis3de_status *stat)
 		stat->pdata->power_off();
 		stat->hw_initialized = 0;
 	}
+
 	if (stat->hw_initialized) {
 		if (stat->pdata->gpio_int1 >= 0)
 			disable_irq_nosync(stat->irq1);
@@ -693,14 +695,16 @@ static ssize_t attr_set_range(struct device *dev,
 		range = LIS3DE_ACC_G_16G;
 		break;
 	default:
-		dev_err(stat->dev,
-			"invalid range request: %lu, discarded\n", val);
+		dev_err(stat->dev, "invalid range request: %lu,"
+			" discarded\n", val);
+
 		return -EINVAL;
 	}
 	mutex_lock(&stat->lock);
 	err = lis3de_update_fs_range(stat, range);
 	if (err < 0) {
 		mutex_unlock(&stat->lock);
+
 		return err;
 	}
 	stat->pdata->fs_range = range;
@@ -792,7 +796,6 @@ static ssize_t attr_set_click_cfg(struct device *dev,
 static ssize_t attr_get_click_cfg(struct device *dev,
 				  struct device_attribute *attr, char *buf)
 {
-
 	return read_single_reg(dev, buf, TT_CFG);
 }
 
@@ -909,7 +912,6 @@ static ssize_t attr_addr_set(struct device *dev, struct device_attribute *attr,
 #endif
 
 static struct device_attribute attributes[] = {
-
 	__ATTR(pollrate_ms, 0664, attr_get_polling_rate, attr_set_polling_rate),
 	__ATTR(range, 0664, attr_get_range, attr_set_range),
 	__ATTR(enable_device, 0664, attr_get_enable, attr_set_enable),
@@ -922,7 +924,7 @@ static struct device_attribute attributes[] = {
 	__ATTR(click_threshold, 0664, attr_get_click_ths, attr_set_click_ths),
 	__ATTR(click_timelimit, 0664, attr_get_click_tlim, attr_set_click_tlim),
 	__ATTR(click_timelatency, 0664, attr_get_click_tlat,
-	       attr_set_click_tlat),
+							attr_set_click_tlat),
 	__ATTR(click_timewindow, 0664, attr_get_click_tw, attr_set_click_tw),
 
 #ifdef DEBUG
@@ -942,7 +944,7 @@ static int create_sysfs_interfaces(struct device *dev)
 	return 0;
 
 error:
-	for (; i >= 0; i--)
+	for ( ; i >= 0; i--)
 		device_remove_file(dev, attributes + i);
 	dev_err(dev, "%s:Unable to create interface\n", __func__);
 
@@ -1047,9 +1049,8 @@ static int lis3de_input_init(struct lis3de_status *stat)
 	INIT_DELAYED_WORK(&stat->input_work, lis3de_input_work_func);
 	stat->input_dev = input_allocate_device();
 	if (!stat->input_dev) {
-		err = -ENOMEM;
 		dev_err(stat->dev, "input device allocation failed\n");
-		return err;
+		return -ENOMEM;
 	}
 
 #ifdef LIS3DE_EN_OPEN
@@ -1125,8 +1126,7 @@ int lis3de_common_probe(struct lis3de_status *stat)
 	if (!stat->pdata) {
 		err = -ENOMEM;
 		dev_err(stat->dev,
-			"failed to allocate memory for pdata: %d\n",
-			err);
+			"failed to allocate memory for pdata: %d\n", err);
 		goto err_mutexunlock;
 	}
 
@@ -1279,7 +1279,7 @@ err_pdata_init:
 		stat->pdata->exit();
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
-	pr_err("%s: Driver Init failed\n", LIS3DE_ACC_DEV_NAME);
+	pr_err("%s: Driver probe failed\n", LIS3DE_ACC_DEV_NAME);
 
 	return err;
 }
@@ -1331,7 +1331,6 @@ int lis3de_common_suspend(struct lis3de_status *stat)
 	return lis3de_disable(stat);
 }
 EXPORT_SYMBOL(lis3de_common_suspend);
-
 #endif /* CONFIG_PM_SLEEP */
 
 MODULE_DESCRIPTION("lis3de accelerometer driver");

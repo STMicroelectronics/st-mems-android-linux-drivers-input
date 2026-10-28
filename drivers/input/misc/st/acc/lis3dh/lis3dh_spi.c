@@ -63,6 +63,7 @@ static int lis3dh_acc_spi_read(struct lis3dh_acc_status *stat, u8 reg_addr, int 
 	xfers[1].len = len;
 
 	mutex_lock(&stat->tb.buf_lock);
+
 	stat->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
 
 	spi_message_init(&msg);
@@ -100,8 +101,8 @@ static int lis3dh_acc_spi_write(struct lis3dh_acc_status *stat, u8 reg_addr, int
 	xfers.len = len + 1;
 
 	mutex_lock(&stat->tb.buf_lock);
-	stat->tb.tx_buf[0] = reg_addr | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
 
+	stat->tb.tx_buf[0] = reg_addr | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
 	memcpy(&stat->tb.tx_buf[1], data, len);
 
 	spi_message_init(&msg);

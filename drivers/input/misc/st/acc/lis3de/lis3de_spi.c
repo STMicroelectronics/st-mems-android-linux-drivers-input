@@ -39,7 +39,7 @@
 #define SPI_AUTO_INCREMENT	0x40
 
 static int lis3de_spi_read(struct lis3de_status *stat, u8 reg_addr, int len,
-			   u8 *data)
+				u8 *data)
 {
 	int err;
 	struct spi_message msg;
@@ -65,9 +65,11 @@ static int lis3de_spi_read(struct lis3de_status *stat, u8 reg_addr, int len,
 	mutex_lock(&stat->tb.buf_lock);
 
 	stat->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
+
 	spi_message_init(&msg);
 	spi_message_add_tail(&xfers[0], &msg);
 	spi_message_add_tail(&xfers[1], &msg);
+
 	err = spi_sync(to_spi_device(stat->dev), &msg);
 	if (!err)
 		memcpy(data, stat->tb.rx_buf, len);
@@ -102,6 +104,7 @@ static int lis3de_spi_write(struct lis3de_status *stat, u8 reg_addr, int len,
 
 	stat->tb.tx_buf[0] = reg_addr | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
 	memcpy(&stat->tb.tx_buf[1], data, len);
+
 	spi_message_init(&msg);
 	spi_message_add_tail(&xfers, &msg);
 	err = spi_sync(to_spi_device(stat->dev), &msg);
@@ -172,7 +175,9 @@ static int lis3de_resume(struct device *dev)
 	return lis3de_common_resume(stat);
 }
 
-static SIMPLE_DEV_PM_OPS(lis3de_pm_ops, lis3de_suspend, lis3de_resume);
+static SIMPLE_DEV_PM_OPS(lis3de_pm_ops,
+				lis3de_suspend,
+				lis3de_resume);
 
 #define LIS3DE_PM_OPS	(&lis3de_pm_ops)
 #else /* CONFIG_PM_SLEEP */

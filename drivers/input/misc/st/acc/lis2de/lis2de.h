@@ -74,7 +74,7 @@ Version History.
 #define BUFF_RX_MAX_LENGTH		(BUFF_MAX_PAYLOAD_LENGTH)
 #define BUFF_TX_MAX_LENGTH		(BUFF_MAX_PAYLOAD_LENGTH + 1)
 
-#define	RESUME_ENTRIES			17
+#define RESUME_ENTRIES			17
 
 struct lis2de_acc_status;
 
