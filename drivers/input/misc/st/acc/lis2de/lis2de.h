@@ -70,8 +70,9 @@ Version History.
 #define LIS2DE_ACC_G_8G			0x20
 #define LIS2DE_ACC_G_16G		0x30
 
-#define BUFF_RX_MAX_LENGTH		16
-#define BUFF_TX_MAX_LENGTH		16
+#define BUFF_MAX_PAYLOAD_LENGTH		32
+#define BUFF_RX_MAX_LENGTH		(BUFF_MAX_PAYLOAD_LENGTH)
+#define BUFF_TX_MAX_LENGTH		(BUFF_MAX_PAYLOAD_LENGTH + 1)
 
 #define	RESUME_ENTRIES			17
 
@@ -112,7 +113,7 @@ struct lis2de_acc_transfer_buffer {
 /* specific bus I/O functions */
 struct lis2de_acc_transfer_function {
 	int (*write)(struct lis2de_acc_status *stat, u8 reg_addr, int len,
-		     u8 *data);
+		     const u8 *data);
 	int (*read)(struct lis2de_acc_status *stat, u8 reg_addr, int len,
 		    u8 *data);
 };

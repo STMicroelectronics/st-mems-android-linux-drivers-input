@@ -47,6 +47,16 @@ static int lis2de_acc_i2c_read(struct lis2de_acc_status *stat, u8 reg_addr,
 	struct i2c_client *client = to_i2c_client(stat->dev);
 	int tries = 0;
 
+	if (!data) {
+		dev_err(stat->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > BUFF_RX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags;
@@ -68,21 +78,30 @@ static int lis2de_acc_i2c_read(struct lis2de_acc_status *stat, u8 reg_addr,
 }
 
 static int lis2de_acc_i2c_write(struct lis2de_acc_status *stat, u8 reg_addr,
-				int len, u8 *data)
+				int len, const u8 *data)
 {
-	int err = 0;
-	u8 send[len + 1];
+	int err = -1;
+	u8 send[BUFF_TX_MAX_LENGTH];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(stat->dev);
+
+	if (!data) {
+		dev_err(stat->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= BUFF_TX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
 	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
 	send[0] = reg_addr;
 	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
 
 	msg.addr = client->addr;
 	msg.flags = client->flags;
-	msg.len = len;
+	msg.len = len + 1;
 	msg.buf = send;
 
 	err = i2c_transfer(client->adapter, &msg, 1);

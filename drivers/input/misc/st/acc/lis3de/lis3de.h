@@ -60,8 +60,9 @@
 #define LIS3DE_ACC_G_8G		0x20
 #define LIS3DE_ACC_G_16G	0x30
 
-#define BUFF_RX_MAX_LENGTH	500
-#define BUFF_TX_MAX_LENGTH	500
+#define BUFF_MAX_PAYLOAD_LENGTH	500
+#define BUFF_RX_MAX_LENGTH	(BUFF_MAX_PAYLOAD_LENGTH)
+#define BUFF_TX_MAX_LENGTH	(BUFF_MAX_PAYLOAD_LENGTH + 1)
 
 #define	RESUME_ENTRIES		17
 
@@ -94,6 +95,7 @@ struct lis3de_platform_data {
 };
 
 struct lis3de_transfer_buffer {
+	struct mutex buf_lock;
 	u8 rx_buf[BUFF_RX_MAX_LENGTH];
 	u8 tx_buf[BUFF_TX_MAX_LENGTH] ____cacheline_aligned;
 };
@@ -101,7 +103,7 @@ struct lis3de_transfer_buffer {
 /* specific bus I/O functions */
 struct lis3de_transfer_function {
 	int (*write)(struct lis3de_status *stat, u8 reg_addr, int len,
-		     u8 *data);
+		     const u8 *data);
 	int (*read)(struct lis3de_status *stat, u8 reg_addr, int len,
 		    u8 *data);
 };

@@ -31,6 +31,7 @@
 #include <linux/spi/spi.h>
 #include <linux/types.h>
 #include <linux/input.h>
+#include <linux/device.h>
 
 #include "lis3dh.h"
 
@@ -42,20 +43,24 @@ static int lis3dh_acc_spi_read(struct lis3dh_acc_status *stat, u8 reg_addr, int 
 {
 	int err;
 	struct spi_message msg;
-	struct spi_device *spi = to_spi_device(stat->dev);
+	struct spi_transfer xfers[2] = { };
 
-	struct spi_transfer xfers[] = {
-		{
-			.tx_buf = stat->tb.tx_buf,
-			.bits_per_word = 8,
-			.len = 1,
-		},
-		{
-			.rx_buf = stat->tb.rx_buf,
-			.bits_per_word = 8,
-			.len = len,
-		}
-	};
+	if (!data) {
+		dev_err(stat->dev, "Invalid SPI read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > BUFF_RX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid SPI read length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers[0].tx_buf = stat->tb.tx_buf;
+	xfers[0].bits_per_word = 8;
+	xfers[0].len = 1;
+	xfers[1].rx_buf = stat->tb.rx_buf;
+	xfers[1].bits_per_word = 8;
+	xfers[1].len = len;
 
 	mutex_lock(&stat->tb.buf_lock);
 	stat->tb.tx_buf[0] = reg_addr | SENSORS_SPI_READ | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
@@ -64,7 +69,7 @@ static int lis3dh_acc_spi_read(struct lis3dh_acc_status *stat, u8 reg_addr, int 
 	spi_message_add_tail(&xfers[0], &msg);
 	spi_message_add_tail(&xfers[1], &msg);
 
-	err = spi_sync(spi, &msg);
+	err = spi_sync(to_spi_device(stat->dev), &msg);
 	if (err)
 		goto acc_spi_read_error;
 
@@ -80,20 +85,25 @@ acc_spi_read_error:
 }
 
 static int lis3dh_acc_spi_write(struct lis3dh_acc_status *stat, u8 reg_addr, int len,
-			       u8 *data)
+				const u8 *data)
 {
 	int err;
 	struct spi_message msg;
-	struct spi_device *spi = to_spi_device(stat->dev);
+	struct spi_transfer xfers = { };
 
-	struct spi_transfer xfers = {
-		.tx_buf = stat->tb.tx_buf,
-		.bits_per_word = 8,
-		.len = len + 1,
-	};
+	if (!data) {
+		dev_err(stat->dev, "Invalid SPI write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	if (len >= BUFF_RX_MAX_LENGTH)
-		return -ENOMEM;
+	if (len <= 0 || len >= BUFF_TX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid SPI write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	xfers.tx_buf = stat->tb.tx_buf;
+	xfers.bits_per_word = 8;
+	xfers.len = len + 1;
 
 	mutex_lock(&stat->tb.buf_lock);
 	stat->tb.tx_buf[0] = reg_addr | ((len > 1) ? SPI_AUTO_INCREMENT : 0);
@@ -102,7 +112,8 @@ static int lis3dh_acc_spi_write(struct lis3dh_acc_status *stat, u8 reg_addr, int
 
 	spi_message_init(&msg);
 	spi_message_add_tail(&xfers, &msg);
-	err = spi_sync(spi, &msg);
+	err = spi_sync(to_spi_device(stat->dev), &msg);
+
 	mutex_unlock(&stat->tb.buf_lock);
 
 	return err;

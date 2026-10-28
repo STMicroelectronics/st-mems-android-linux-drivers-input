@@ -1116,6 +1116,7 @@ int lis3de_common_probe(struct lis3de_status *stat)
 	dev_info(stat->dev, "probe start.\n");
 
 	mutex_init(&stat->lock);
+	mutex_init(&stat->tb.buf_lock);
 	mutex_lock(&stat->lock);
 
 	stat->pdata = devm_kzalloc(stat->dev,
