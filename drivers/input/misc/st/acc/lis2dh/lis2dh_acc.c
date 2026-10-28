@@ -283,7 +283,6 @@ static int lis2dh_acc_hw_init(struct lis2dh_acc_status *stat)
 
 	return 0;
 
-	stat->hw_working = 0;
 err_resume_state:
 	stat->hw_initialized = 0;
 	dev_err(stat->dev, "hw init error 0x%02x,0x%02x: %d\n", buf[0],
@@ -398,12 +397,19 @@ static int lis2dh_acc_update_odr(struct lis2dh_acc_status *stat,
 	 *  configuration out to it */
 	if (atomic_read(&stat->enabled)) {
 		err = stat->tf->write(stat, CTRL_REG1, 1, &config);
-		if (err >= 0)
-			stat->resume_state[RES_CTRL_REG1] = config;
+		if (err < 0)
+			goto error;
+
+		stat->resume_state[RES_CTRL_REG1] = config;
 	}
 
 	stat->ktime = ktime_set(0, MS_TO_NS(poll_interval_ms));
-	
+	return err;
+
+error:
+	dev_err(stat->dev, "update odr failed 0x%02x,0x%02x: %d\n",
+		CTRL_REG1, config, err);
+
 	return err;
 }
 
@@ -983,6 +989,8 @@ int lis2dh_acc_probe(struct lis2dh_acc_status *stat)
 	mutex_init(&stat->lock);
 	mutex_init(&stat->tb.buf_lock);
 
+	stat->hw_working = 0;
+
 	/* Check device ID and bus connection */
 	err = stat->tf->read(stat, WHO_AM_I, 1, &wai);
 	if (err < 0) {
@@ -1070,8 +1078,10 @@ int lis2dh_acc_probe(struct lis2dh_acc_status *stat)
 	mutex_unlock(&stat->lock);
 
 	stat->acc_workqueue = create_workqueue("lis2dh_acc_workqueue");
-	if (!stat->acc_workqueue)
+	if (!stat->acc_workqueue) {
+		err = -ENOMEM;
 		goto err_remove_sysfs_int;
+	}
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6,13,0)
 	hrtimer_init(&stat->hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);

@@ -279,8 +279,8 @@ static int lis3de_hw_init(struct lis3de_status *stat)
 	return 0;
 
 err_firstread:
-	stat->hw_working = 0;
 err_unknown_device:
+	stat->hw_working = 0;
 err_resume_state:
 	stat->hw_initialized = 0;
 	dev_err(stat->dev,
@@ -424,25 +424,26 @@ static int lis3de_update_fs_range(struct lis3de_status *stat,
 	/* Updates configuration register 4,
 	* which contains fs range setting */
 	err = stat->tf->read(stat, CTRL_REG4, 1, &init_val);
-	if (err < 0)
-		goto error;
+	if (err < 0) {
+		dev_err(stat->dev, "update fs fail to read at 0x%02x, err:%d\n",
+			CTRL_REG4, err);
+		return err;
+	}
 
 	stat->resume_state[RES_CTRL_REG4] = init_val;
 	new_val = new_fs_range;
 	updated_val = ((LIS3DE_ACC_FS_MASK & new_val) |
 		       ((~LIS3DE_ACC_FS_MASK) & init_val));
 	err = stat->tf->write(stat, CTRL_REG4, 1, &updated_val);
-	if (err < 0)
-		goto error;
+	if (err < 0) {
+		dev_err(stat->dev,
+			"update fs fail to write 0x%02x at 0x%02x, err:%d\n",
+			 updated_val, CTRL_REG4, err);
+		return err;
+	}
 
 	stat->resume_state[RES_CTRL_REG4] = updated_val;
 	stat->sensitivity = new_sensitivity;
-
-	return err;
-error:
-	dev_err(stat->dev,
-		"update fs range failed 0x%02x,0x%02x: %d\n",
-		CTRL_REG4, updated_val, err);
 
 	return err;
 }

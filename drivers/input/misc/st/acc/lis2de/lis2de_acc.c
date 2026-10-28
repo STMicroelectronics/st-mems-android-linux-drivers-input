@@ -290,7 +290,6 @@ static int lis2de_acc_hw_init(struct lis2de_acc_status *stat)
 
 	return 0;
 
-	stat->hw_working = 0;
 err_resume_state:
 	stat->hw_initialized = 0;
 	dev_err(stat->dev, "hw init error 0x%02x,0x%02x: %d\n", buf[0],
@@ -1054,6 +1053,8 @@ int lis2de_acc_probe(struct lis2de_acc_status *stat)
 
 	mutex_init(&stat->lock);
 	mutex_init(&stat->tb.buf_lock);
+
+	stat->hw_working = 0;
 
 	/* Check device ID and bus connection */
 	err = stat->tf->read(stat, WHO_AM_I, 1, &wai);

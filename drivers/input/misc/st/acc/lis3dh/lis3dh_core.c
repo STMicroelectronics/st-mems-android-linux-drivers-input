@@ -287,8 +287,6 @@ static int lis3dh_acc_hw_init(struct lis3dh_acc_status *stat)
 
 	return 0;
 
-	stat->hw_working = 0;
-
 err_resume_state:
 	stat->hw_initialized = 0;
 	dev_err(stat->dev, "hw init error: %d\n", err);
@@ -991,6 +989,8 @@ int lis3dh_acc_probe(struct lis3dh_acc_status *stat, int irq)
 
 	mutex_init(&stat->lock);
 	mutex_init(&stat->tb.buf_lock);
+
+	stat->hw_working = 0;
 
 	/* Check device ID and bus connection */
 	err = stat->tf->read(stat, WHO_AM_I, 1, &wai);
