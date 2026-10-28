@@ -42,7 +42,7 @@ static int lps22hb_i2c_read(struct lps22_prs_data *cdata, u8 reg_addr, int len,
 
 	err = i2c_transfer(client->adapter, msg, 2);
 
-	return (err == 2) ? 0 : 1;
+	return (err == 2) ? 0 : ((err < 0) ? err : -EIO);
 }
 
 static int lps22hb_i2c_write(struct lps22_prs_data *cdata, u8 reg_addr, int len,
@@ -64,7 +64,7 @@ static int lps22hb_i2c_write(struct lps22_prs_data *cdata, u8 reg_addr, int len,
 
 	err = i2c_transfer(client->adapter, &msg, 1);
 
-	return (err == 1) ? 0 : 1;
+	return (err == 1) ? 0 : ((err < 0) ? err : -EIO);
 }
 
 static const struct lps22_prs_transfer_function lps22hb_tf_i2c = {
