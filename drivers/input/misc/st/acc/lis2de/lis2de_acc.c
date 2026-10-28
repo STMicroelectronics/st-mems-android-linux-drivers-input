@@ -1025,15 +1025,20 @@ static int lis2de_acc_input_init(struct lis2de_acc_status *stat)
 		dev_err(stat->dev, "unable to register input device %s\n",
 			stat->input_dev->name);
 		input_free_device(stat->input_dev);
+		stat->input_dev = NULL;
+		return err;
 	}
 
-	return err;
+	return 0;
 }
 
 static void lis2de_acc_input_cleanup(struct lis2de_acc_status *stat)
 {
+	if (!stat->input_dev)
+		return;
+
 	input_unregister_device(stat->input_dev);
-	input_free_device(stat->input_dev);
+	stat->input_dev = NULL;
 }
 
 /*
@@ -1070,7 +1075,8 @@ int lis2de_acc_probe(struct lis2de_acc_status *stat)
 	mutex_lock(&stat->lock);
 	
 	stat->hw_working = 1;
-	stat->pdata = kmalloc(sizeof(struct lis2de_acc_platform_data), GFP_KERNEL);
+	stat->pdata = devm_kzalloc(stat->dev,
+			sizeof(*stat->pdata), GFP_KERNEL);
 	if (!stat->pdata) {
 		err = -ENOMEM;
 		dev_err(stat->dev,
@@ -1092,7 +1098,7 @@ int lis2de_acc_probe(struct lis2de_acc_status *stat)
 	err = lis2de_acc_validate_pdata(stat);
 	if (err < 0) {
 		dev_err(stat->dev, "failed to validate platform data\n");
-		goto exit_kfree_pdata;
+		goto err_mutexunlock;
 	}
 
 	if (stat->pdata->init) {
@@ -1222,8 +1228,6 @@ err_power_off:
 err_pdata_init:
 	if (stat->pdata->exit)
 		stat->pdata->exit();
-exit_kfree_pdata:
-	kfree(stat->pdata);
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
 	pr_err("%s: Driver Init failed\n", LIS2DE_ACC_DEV_NAME);
@@ -1235,6 +1239,8 @@ EXPORT_SYMBOL(lis2de_acc_probe);
 int lis2de_acc_remove(struct lis2de_acc_status *stat)
 {
 	dev_info(stat->dev, "driver removing\n");
+
+	lis2de_acc_disable(stat);
 
 	if (stat->pdata->gpio_int1 >= 0) {
 		free_irq(stat->irq1, stat);
@@ -1248,15 +1254,12 @@ int lis2de_acc_remove(struct lis2de_acc_status *stat)
 		destroy_workqueue(stat->irq2_work_queue);
 	}
 
-	lis2de_acc_disable(stat);
 	lis2de_acc_input_cleanup(stat);
 
 	remove_sysfs_interfaces(stat->dev);
 
 	if (stat->pdata->exit)
 		stat->pdata->exit();
-	kfree(stat->pdata);
-	kfree(stat);
 
 	return 0;
 }

@@ -118,7 +118,8 @@ static int lis3dh_acc_spi_probe(struct spi_device *spi)
 	int err;
 	struct lis3dh_acc_status *stat;
 
-	stat = kmalloc(sizeof(struct lis3dh_acc_status), GFP_KERNEL);
+	stat = devm_kzalloc(&spi->dev,
+			sizeof(struct lis3dh_acc_status), GFP_KERNEL);
 	if (!stat)
 		return -ENOMEM;
 
@@ -130,14 +131,9 @@ static int lis3dh_acc_spi_probe(struct spi_device *spi)
 
 	err = lis3dh_acc_probe(stat, spi->irq);
 	if (err < 0)
-		goto free_data;
+		return err;
 
 	return 0;
-
-free_data:
-	kfree(stat);
-
-	return err;
 }
 
 #if KERNEL_VERSION(5, 18, 0) <= LINUX_VERSION_CODE
@@ -146,7 +142,6 @@ static void lis3dh_acc_spi_remove(struct spi_device *spi)
 	struct lis3dh_acc_status *stat = spi_get_drvdata(spi);
 
 	lis3dh_acc_remove(stat);
-	kfree(stat);
 }
 #else
 static int lis3dh_acc_spi_remove(struct spi_device *spi)
@@ -154,7 +149,6 @@ static int lis3dh_acc_spi_remove(struct spi_device *spi)
 	struct lis3dh_acc_status *stat = spi_get_drvdata(spi);
 
 	lis3dh_acc_remove(stat);
-	kfree(stat);
 
 	return 0;
 }

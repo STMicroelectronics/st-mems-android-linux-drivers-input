@@ -1073,15 +1073,20 @@ static int lis3de_input_init(struct lis3de_status *stat)
 		dev_err(stat->dev, "unable to register input device %s\n",
 			stat->input_dev->name);
 		input_free_device(stat->input_dev);
+		stat->input_dev = NULL;
+		return err;
 	}
 
-	return err;
+	return 0;
 }
 
 static void lis3de_input_cleanup(struct lis3de_status *stat)
 {
+	if (!stat->input_dev)
+		return;
+
 	input_unregister_device(stat->input_dev);
-	input_free_device(stat->input_dev);
+	stat->input_dev = NULL;
 }
 
 #ifdef CONFIG_OF
@@ -1112,8 +1117,9 @@ int lis3de_common_probe(struct lis3de_status *stat)
 	mutex_init(&stat->lock);
 	mutex_lock(&stat->lock);
 
-	stat->pdata = kzalloc(sizeof(*stat->pdata), GFP_KERNEL);
-	if (stat->pdata == NULL) {
+	stat->pdata = devm_kzalloc(stat->dev,
+			sizeof(*stat->pdata), GFP_KERNEL);
+	if (!stat->pdata) {
 		err = -ENOMEM;
 		dev_err(stat->dev,
 			"failed to allocate memory for pdata: %d\n",
@@ -1138,7 +1144,7 @@ int lis3de_common_probe(struct lis3de_status *stat)
 	err = lis3de_validate_pdata(stat);
 	if (err < 0) {
 		dev_err(stat->dev, "failed to validate platform data\n");
-		goto exit_kfree_pdata;
+		goto err_mutexunlock;
 	}
 
 	if (stat->pdata->init) {
@@ -1268,8 +1274,6 @@ err_power_off:
 err_pdata_init:
 	if (stat->pdata->exit)
 		stat->pdata->exit();
-exit_kfree_pdata:
-	kfree(stat->pdata);
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
 	pr_err("%s: Driver Init failed\n", LIS3DE_ACC_DEV_NAME);
@@ -1281,6 +1285,8 @@ EXPORT_SYMBOL(lis3de_common_probe);
 int lis3de_common_remove(struct lis3de_status *stat)
 {
 	dev_info(stat->dev, "driver removing\n");
+
+	lis3de_disable(stat);
 
 	if (stat->pdata->gpio_int1 >= 0) {
 		free_irq(stat->irq1, stat);
@@ -1294,14 +1300,12 @@ int lis3de_common_remove(struct lis3de_status *stat)
 		destroy_workqueue(stat->irq2_work_queue);
 	}
 
-	lis3de_disable(stat);
 	lis3de_input_cleanup(stat);
 
 	remove_sysfs_interfaces(stat->dev);
 
 	if (stat->pdata->exit)
 		stat->pdata->exit();
-	kfree(stat->pdata);
 
 	return 0;
 }

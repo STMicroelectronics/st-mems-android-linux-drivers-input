@@ -933,15 +933,20 @@ static int lis3dh_acc_input_init(struct lis3dh_acc_status *stat)
 		dev_err(stat->dev, "unable to register input device %s\n",
 			stat->input_dev->name);
 		input_free_device(stat->input_dev);
+		stat->input_dev = NULL;
+		return err;
 	}
 
-	return err;
+	return 0;
 }
 
 static void lis3dh_acc_input_cleanup(struct lis3dh_acc_status *stat)
 {
+	if (!stat->input_dev)
+		return;
+
 	input_unregister_device(stat->input_dev);
-	input_free_device(stat->input_dev);
+	stat->input_dev = NULL;
 }
 
 static irqreturn_t lis3dh_acc_save_timestamp(int irq, void *private)
@@ -1007,7 +1012,8 @@ int lis3dh_acc_probe(struct lis3dh_acc_status *stat, int irq)
 	mutex_lock(&stat->lock);
 	
 	stat->hw_working = 1;
-	stat->pdata = kmalloc(sizeof(struct lis3dh_acc_platform_data), GFP_KERNEL);
+	stat->pdata = devm_kzalloc(stat->dev,
+			sizeof(*stat->pdata), GFP_KERNEL);
 	if (!stat->pdata) {
 		err = -ENOMEM;
 		dev_err(stat->dev,
@@ -1027,7 +1033,7 @@ int lis3dh_acc_probe(struct lis3dh_acc_status *stat, int irq)
 	err = lis3dh_acc_validate_pdata(stat);
 	if (err < 0) {
 		dev_err(stat->dev, "failed to validate platform data\n");
-		goto exit_kfree_pdata;
+		goto err_mutexunlock;
 	}
 
 	if (stat->pdata->init) {
@@ -1111,8 +1117,6 @@ err_power_off:
 err_pdata_init:
 	if (stat->pdata->exit)
 		stat->pdata->exit();
-exit_kfree_pdata:
-	kfree(stat->pdata);
 err_mutexunlock:
 	mutex_unlock(&stat->lock);
 	pr_err("%s: Driver Init failed\n", LIS3DH_ACC_DEV_NAME);
@@ -1132,8 +1136,6 @@ int lis3dh_acc_remove(struct lis3dh_acc_status *stat)
 
 	if (stat->pdata->exit)
 		stat->pdata->exit();
-	kfree(stat->pdata);
-	kfree(stat);
 
 	return 0;
 }

@@ -113,7 +113,8 @@ static int lis3de_i2c_probe(struct i2c_client *client,
 	int err;
 	struct lis3de_status *stat;
 
-	stat = kmalloc(sizeof(struct lis3de_status), GFP_KERNEL);
+	stat = devm_kzalloc(&client->dev,
+				sizeof(struct lis3de_status), GFP_KERNEL);
 	if (!stat)
 		return -ENOMEM;
 
@@ -125,14 +126,9 @@ static int lis3de_i2c_probe(struct i2c_client *client,
 
 	err = lis3de_common_probe(stat);
 	if (err < 0)
-		goto free_data;
+		return err;
 
 	return 0;
-
-free_data:
-	kfree(stat);
-
-	return err;
 }
 
 #if KERNEL_VERSION(6, 1, 0) <= LINUX_VERSION_CODE
@@ -141,7 +137,6 @@ static void lis3de_i2c_remove(struct i2c_client *client)
 	struct lis3de_status *stat = i2c_get_clientdata(client);
 
 	lis3de_common_remove(stat);
-	kfree(stat);
 }
 #else
 static int lis3de_i2c_remove(struct i2c_client *client)
@@ -149,7 +144,6 @@ static int lis3de_i2c_remove(struct i2c_client *client)
 	struct lis3de_status *stat = i2c_get_clientdata(client);
 
 	lis3de_common_remove(stat);
-	kfree(stat);
 
 	return 0;
 }
