@@ -34,6 +34,16 @@ static int lsm330_acc_i2c_read(struct device *dev, u8 addr,
 	struct i2c_msg msg[2];
 	struct i2c_client *client = to_i2c_client(dev);
 
+	if (!data) {
+		dev_err(dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LSM330_RX_MAX_LENGTH) {
+		dev_err(dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags & I2C_M_TEN;
 	msg[0].len = 1;

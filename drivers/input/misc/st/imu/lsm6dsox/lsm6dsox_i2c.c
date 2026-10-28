@@ -26,6 +26,16 @@ static int lsm6dsox_i2c_read(struct lsm6dsox_data *cdata, u8 reg_addr,
 	struct i2c_msg msg[2];
 	int err = 0;
 
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LSM6DSOX_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags;
 	msg[0].len = 1;

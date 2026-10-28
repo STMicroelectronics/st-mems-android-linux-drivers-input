@@ -36,6 +36,16 @@ static int lsm303agr_acc_i2c_read(struct device *dev, u8 reg_addr, int len,
 	struct i2c_msg msg[2];
 	struct i2c_client *client = to_i2c_client(dev);
 
+	if (!data) {
+		dev_err(dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LSM303AGR_RX_MAX_LENGTH) {
+		dev_err(dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 	if (len > 1)
 		reg_addr |= I2C_AUTO_INCREMENT;
 

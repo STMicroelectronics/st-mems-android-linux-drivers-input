@@ -47,6 +47,16 @@ static int lis3dsh_i2c_read(struct lis3dsh_status *stat, u8 reg_addr,
 	int tries = 0;
 	struct i2c_client *client = to_i2c_client(stat->dev);
 
+	if (!data) {
+		dev_err(stat->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > BUFF_RX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags;
 	msg[0].len = 1;

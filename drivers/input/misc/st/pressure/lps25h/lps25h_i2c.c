@@ -50,6 +50,16 @@ static int lps25h_i2c_read(struct lps25h_prs_data *stat, u8 reg_addr,
 	int tries = 0;
 	struct i2c_client *client = to_i2c_client(stat->dev);
 
+	if (!data) {
+		dev_err(stat->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > LPS25H_RX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 #ifdef HAS_IF_AUTO_INCREMENT
 	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
 #endif

@@ -49,6 +49,16 @@ static int h3lis100dl_i2c_read(struct h3lis100dl_data *cdata, u8 reg_addr, int l
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 	int tries = 0;
 
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C read: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len > H3LIS100DL_RX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C read length: %d\n", len);
+		return -EINVAL;
+	}
+
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags;
 	msg[0].len = 1;
