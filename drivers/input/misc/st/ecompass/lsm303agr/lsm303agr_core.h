@@ -28,10 +28,10 @@ struct lsm303agr_transfer_function {
 	int (*read) (struct device *dev, u8 reg_addr, int len, u8 *data);
 };
 
-#if IS_ENABLED(CONFIG_INPUT_LSM303AGR_SPI)
 #define LSM303AGR_RX_MAX_LENGTH		500
 #define LSM303AGR_TX_MAX_LENGTH		500
 
+#if IS_ENABLED(CONFIG_INPUT_LSM303AGR_SPI)
 struct lsm303agr_transfer_buffer {
 	u8 rx_buf[LSM303AGR_RX_MAX_LENGTH];
 	u8 tx_buf[LSM303AGR_TX_MAX_LENGTH] ____cacheline_aligned;

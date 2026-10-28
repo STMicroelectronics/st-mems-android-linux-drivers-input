@@ -80,10 +80,10 @@ struct l3gd20h_gyr_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if IS_ENABLED(CONFIG_INPUT_L3GD20H_SPI)
 #define L3GD20H_RX_MAX_LENGTH		500
 #define L3GD20H_TX_MAX_LENGTH		500
 
+#if IS_ENABLED(CONFIG_INPUT_L3GD20H_SPI)
 struct l3gd20h_gyr_transfer_buffer {
 	u8 rx_buf[L3GD20H_RX_MAX_LENGTH];
 	u8 tx_buf[L3GD20H_TX_MAX_LENGTH] ____cacheline_aligned;

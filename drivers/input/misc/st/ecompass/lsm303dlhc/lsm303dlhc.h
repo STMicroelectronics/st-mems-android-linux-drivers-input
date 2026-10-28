@@ -126,6 +126,9 @@ Revision 1-0-7 26/11/2010
 #define INPUT_EVENT_Y			MSC_PULSELED
 #define INPUT_EVENT_Z			MSC_GESTURE
 
+#define LSM303DLHC_RX_MAX_LENGTH		500
+#define LSM303DLHC_TX_MAX_LENGTH		500
+
 struct lsm303dlhc_transfer_function {
 	int (*write)(struct device *dev, u8 addr, int len, u8 *data);
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);

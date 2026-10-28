@@ -134,10 +134,10 @@ struct lsm330_transfer_function {
 	int (*read)(struct device *dev, u8 addr, int len, u8 *data);
 };
 
-#if IS_ENABLED(CONFIG_INPUT_LSM330_SPI)
 #define LSM330_RX_MAX_LENGTH		500
 #define LSM330_TX_MAX_LENGTH		500
 
+#if IS_ENABLED(CONFIG_INPUT_LSM330_SPI)
 struct lsm330_transfer_buffer {
 	u8 rx_buf[LSM330_RX_MAX_LENGTH];
 	u8 tx_buf[LSM330_TX_MAX_LENGTH] ____cacheline_aligned;

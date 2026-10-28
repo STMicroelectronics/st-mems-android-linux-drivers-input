@@ -129,10 +129,10 @@
 #define INPUT_EVENT_TIME_LSB		MSC_MAX
 
 
-#if IS_ENABLED(CONFIG_INPUT_LSM9DS1_SPI)
 #define LSM9DS1_RX_MAX_LENGTH		500
 #define LSM9DS1_TX_MAX_LENGTH		500
 
+#if IS_ENABLED(CONFIG_INPUT_LSM9DS1_SPI)
 struct lsm9ds1_transfer_buffer {
 	u8 rx_buf[LSM9DS1_RX_MAX_LENGTH];
 	u8 tx_buf[LSM9DS1_TX_MAX_LENGTH] ____cacheline_aligned;

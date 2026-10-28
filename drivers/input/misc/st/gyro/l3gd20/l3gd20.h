@@ -102,10 +102,10 @@ struct l3gd20_gyr_platform_data {
 
 #define	RESUME_ENTRIES		6
 
-#if IS_ENABLED(CONFIG_INPUT_L3GD20_SPI)
 #define L3GD20_RX_MAX_LENGTH		500
 #define L3GD20_TX_MAX_LENGTH		500
 
+#if IS_ENABLED(CONFIG_INPUT_L3GD20_SPI)
 struct l3gd20_gyr_transfer_buffer {
 	u8 rx_buf[L3GD20_RX_MAX_LENGTH];
 	u8 tx_buf[L3GD20_TX_MAX_LENGTH] ____cacheline_aligned;

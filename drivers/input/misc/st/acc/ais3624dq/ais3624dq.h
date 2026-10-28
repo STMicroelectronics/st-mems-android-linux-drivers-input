@@ -58,10 +58,10 @@
 
 #ifdef __KERNEL__
 
-#if IS_ENABLED(CONFIG_INPUT_AIS3624DQ_SPI)
 #define AIS3624DQ_RX_MAX_LENGTH	500
 #define AIS3624DQ_TX_MAX_LENGTH	500
 
+#if IS_ENABLED(CONFIG_INPUT_AIS3624DQ_SPI)
 struct ais3624dq_transfer_buffer {
 	u8 rx_buf[AIS3624DQ_RX_MAX_LENGTH];
 	u8 tx_buf[AIS3624DQ_TX_MAX_LENGTH] ____cacheline_aligned;
