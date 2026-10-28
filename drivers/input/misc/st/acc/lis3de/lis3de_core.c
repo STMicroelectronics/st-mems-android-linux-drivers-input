@@ -878,17 +878,18 @@ static ssize_t attr_reg_set(struct device *dev, struct device_attribute *attr,
 static ssize_t attr_reg_get(struct device *dev, struct device_attribute *attr,
 			    char *buf)
 {
-	ssize_t ret;
 	struct lis3de_status *stat = dev_get_drvdata(dev);
-	int rc;
-	u8 reg;
+	int err;
+	u8 reg, data;
 
 	mutex_lock(&stat->lock);
 	reg = stat->reg_addr;
 	mutex_unlock(&stat->lock);
-	ret = stat->tf->read(stat, reg, 1, buf);
+	err = stat->tf->read(stat, reg, 1, &data);
+	if (err < 0)
+		return err;
 
-	return ret;
+	return sprintf(buf, "0x%02x\n", data);
 }
 
 static ssize_t attr_addr_set(struct device *dev, struct device_attribute *attr,

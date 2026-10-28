@@ -69,15 +69,12 @@ static int lis3de_spi_read(struct lis3de_status *stat, u8 reg_addr, int len,
 	spi_message_add_tail(&xfers[0], &msg);
 	spi_message_add_tail(&xfers[1], &msg);
 	err = spi_sync(to_spi_device(stat->dev), &msg);
-	if (err) {
-		mutex_unlock(&stat->tb.buf_lock);
-		return err;
-	}
+	if (!err)
+		memcpy(data, stat->tb.rx_buf, len);
 
-	memcpy(data, stat->tb.rx_buf, len);
 	mutex_unlock(&stat->tb.buf_lock);
 
-	return len;
+	return err;
 }
 
 static int lis3de_spi_write(struct lis3de_status *stat, u8 reg_addr, int len,

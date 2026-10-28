@@ -74,7 +74,10 @@ static int lis3de_i2c_read(struct lis3de_status *stat, u8 reg_addr,
 			msleep_interruptible(I2C_RETRY_DELAY);
 	} while ((err != 2) && (++tries < I2C_RETRIES));
 
-	return err;
+	if (err != 2)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
 static int lis3de_i2c_write(struct lis3de_status *stat, u8 reg_addr,
@@ -112,7 +115,7 @@ static int lis3de_i2c_write(struct lis3de_status *stat, u8 reg_addr,
 	} while ((err != 1) && (++tries < I2C_RETRIES));
 
 	if (err != 1)
-		return -EIO;
+		return err < 0 ? err : -EIO;
 
 	return 0;
 }

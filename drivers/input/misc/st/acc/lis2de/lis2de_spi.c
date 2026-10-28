@@ -70,15 +70,9 @@ static int lis2de_acc_spi_read(struct lis2de_acc_status *stat, u8 reg_addr, int 
 	spi_message_add_tail(&xfers[1], &msg);
 
 	err = spi_sync(to_spi_device(stat->dev), &msg);
-	if (err)
-		goto acc_spi_read_error;
+	if (!err)
+		memcpy(data, stat->tb.rx_buf, len);
 
-	memcpy(data, stat->tb.rx_buf, len*sizeof(u8));
-	mutex_unlock(&stat->tb.buf_lock);
-
-	return len;
-
-acc_spi_read_error:
 	mutex_unlock(&stat->tb.buf_lock);
 
 	return err;

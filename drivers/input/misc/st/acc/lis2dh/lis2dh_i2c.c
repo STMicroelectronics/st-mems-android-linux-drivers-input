@@ -74,7 +74,10 @@ static int lis2dh_acc_i2c_read(struct lis2dh_acc_status *stat, u8 reg_addr,
 			msleep_interruptible(I2C_RETRY_DELAY);
 	} while ((err != 2) && (++tries < I2C_RETRIES));
 
-	return err;
+	if (err != 2)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
 static int lis2dh_acc_i2c_write(struct lis2dh_acc_status *stat, u8 reg_addr,
@@ -106,7 +109,10 @@ static int lis2dh_acc_i2c_write(struct lis2dh_acc_status *stat, u8 reg_addr,
 
 	err = i2c_transfer(client->adapter, &msg, 1);
 
-	return err;
+	if (err != 1)
+		return err < 0 ? err : -EIO;
+
+	return 0;
 }
 
 static struct lis2dh_acc_transfer_function lis2dh_acc_tf_i2c = {
