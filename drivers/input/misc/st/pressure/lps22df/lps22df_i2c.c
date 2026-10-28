@@ -60,24 +60,34 @@ static int lps22df_i2c_write(struct lps22df_prs_data *cdata, u8 reg_addr,
 	int err;
 	enum { msg_size = 1 };
 
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
-	if (len > LPS22DF_TX_MAX_LENGTH)
-		return -ENOMEM;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
+	if (len <= 0 || len >= LPS22DF_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len + 1;
-	msg.buf = send;
+	{
+		u8 send[len + 1];
 
-	err = i2c_transfer(client->adapter, &msg, msg_size);
+		send[0] = reg_addr;
+		memcpy(&send[1], data, len * sizeof(u8));
 
-	return (err == msg_size) ? 0 : ((err < 0) ? err : -EIO);
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len + 1;
+		msg.buf = send;
+
+		err = i2c_transfer(client->adapter, &msg, msg_size);
+
+		return (err == msg_size) ? 0 : ((err < 0) ? err : -EIO);
+	}
 }
 
 static const struct lps22df_prs_transfer_function lps22df_tf_i2c = {

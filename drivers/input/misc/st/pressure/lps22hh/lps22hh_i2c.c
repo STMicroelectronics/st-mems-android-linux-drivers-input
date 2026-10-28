@@ -62,22 +62,35 @@ static int lps22hh_i2c_write(struct lps22hh_data *cdata, u8 reg_addr, int len,
 			     u8 *data)
 {
 	int err = 0;
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	if (len <= 0 || len >= LPS22HH_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	err = i2c_transfer(client->adapter, &msg, 1);
+	{
+		u8 send[len + 1];
 
-	return (err == 1) ? 0 : ((err < 0) ? err : -EIO);
+		send[0] = reg_addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len;
+		msg.buf = send;
+
+		err = i2c_transfer(client->adapter, &msg, 1);
+
+		return (err == 1) ? 0 : ((err < 0) ? err : -EIO);
+	}
 }
 
 static const struct lps22hh_transfer_function lps22hh_tf_i2c = {

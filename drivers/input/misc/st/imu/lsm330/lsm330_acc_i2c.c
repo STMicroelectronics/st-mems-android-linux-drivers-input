@@ -68,26 +68,39 @@ static int lsm330_acc_i2c_write(struct device *dev, u8 addr,
 				int len, u8 *data)
 {
 	int i = 0, err;
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(dev);
 
-	send[0] = addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (!data) {
+		dev_err(dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	if (len <= 0 || len >= LSM330_TX_MAX_LENGTH) {
+		dev_err(dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	do {
-		err = i2c_transfer(client->adapter, &msg, 1);
-		if (err != 1)
-			msleep_interruptible(I2C_RETRY_DELAY);
-	} while (err != 1 && ++i < I2C_RETRIES);
+	{
+		u8 send[len + 1];
 
-	return (err != 1) ? -EIO : 0;
+		send[0] = addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len;
+		msg.buf = send;
+
+		do {
+			err = i2c_transfer(client->adapter, &msg, 1);
+			if (err != 1)
+				msleep_interruptible(I2C_RETRY_DELAY);
+		} while (err != 1 && ++i < I2C_RETRIES);
+
+		return (err != 1) ? -EIO : 0;
+	}
 }
 
 static struct lsm330_transfer_function lsm330_acc_i2c_tf = {

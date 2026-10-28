@@ -62,27 +62,40 @@ static int lsm6dsox_i2c_write(struct lsm6dsox_data *cdata, u8 reg_addr,
 {
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 	struct i2c_msg msg;
-	u8 send[len + 1];
 	int err = 0;
 
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
-
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
-
-	if (b_lock) {
-		mutex_lock(&cdata->reg_lock);
-		err = i2c_transfer(client->adapter, &msg, 1);
-		mutex_unlock(&cdata->reg_lock);
-	} else {
-		err = i2c_transfer(client->adapter, &msg, 1);
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
 	}
 
-	return err;
+	if (len <= 0 || len >= LSM6DSOX_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
+
+	{
+		u8 send[len + 1];
+
+		send[0] = reg_addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len;
+		msg.buf = send;
+
+		if (b_lock) {
+			mutex_lock(&cdata->reg_lock);
+			err = i2c_transfer(client->adapter, &msg, 1);
+			mutex_unlock(&cdata->reg_lock);
+		} else {
+			err = i2c_transfer(client->adapter, &msg, 1);
+		}
+
+		return err;
+	}
 }
 
 

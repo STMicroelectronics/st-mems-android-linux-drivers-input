@@ -80,27 +80,40 @@ static int ais3624dq_i2c_write(struct device *dev, u8 reg_addr, int len,
 			       u8 *data)
 {
 	int err = 0, tries = 0;
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(dev);
 
-	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (!data) {
+		dev_err(dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags & I2C_M_TEN;
-	msg.len = len;
-	msg.buf = send;
+	if (len <= 0 || len >= AIS3624DQ_TX_MAX_LENGTH) {
+		dev_err(dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	do {
-		err = i2c_transfer(client->adapter, &msg, 1);
-		if (err != 1)
-			msleep_interruptible(I2C_RETRY_DELAY);
-	} while (err != 1 && ++tries < I2C_RETRIES);
+	{
+		u8 send[len + 1];
 
-	return (err != 1) ? -EIO : err;
+		reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
+		send[0] = reg_addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags & I2C_M_TEN;
+		msg.len = len;
+		msg.buf = send;
+
+		do {
+			err = i2c_transfer(client->adapter, &msg, 1);
+			if (err != 1)
+				msleep_interruptible(I2C_RETRY_DELAY);
+		} while (err != 1 && ++tries < I2C_RETRIES);
+
+		return (err != 1) ? -EIO : err;
+	}
 }
 
 static struct ais3624dq_transfer_function ais3624dq_tf_i2c = {

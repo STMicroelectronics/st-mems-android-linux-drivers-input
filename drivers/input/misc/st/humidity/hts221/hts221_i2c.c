@@ -52,22 +52,35 @@ static int hts221_i2c_read(struct device *dev, u8 addr, int len, u8 *data)
 /* XXX: caller must hold cdata->lock */
 static int hts221_i2c_write(struct device *dev, u8 addr, int len, u8 *data)
 {
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(dev);
 
-	if (len > 1)
-		addr |= I2C_AUTO_INCREMENT;
+	if (!data) {
+		dev_err(dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	send[0] = addr;
-	memcpy(&send[1], data, len * sizeof(u8));
+	if (len <= 0 || len >= HTS221_TX_MAX_LENGTH) {
+		dev_err(dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len + 1;
-	msg.buf = send;
+	{
+		u8 send[len + 1];
 
-	return i2c_transfer(client->adapter, &msg, 1);
+		if (len > 1)
+			addr |= I2C_AUTO_INCREMENT;
+
+		send[0] = addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len + 1;
+		msg.buf = send;
+
+		return i2c_transfer(client->adapter, &msg, 1);
+	}
 }
 
 static const struct hts221_transfer_function hts221_i2c_tf = {

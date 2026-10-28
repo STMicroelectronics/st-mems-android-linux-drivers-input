@@ -75,8 +75,15 @@ static int l3g4200d_i2c_write(struct l3g4200d_data *cdata, u8 reg_addr,
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 	u8 send[1+L3G4200D_GYR_I2C_READ_BUFFSIZE];
 
-	if (len >= ARRAY_SIZE(send))
-		return -ENOMEM;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
+
+	if (len <= 0 || len >= ARRAY_SIZE(send)) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
 	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
 	send[0] = reg_addr;

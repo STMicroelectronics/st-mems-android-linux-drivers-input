@@ -66,23 +66,36 @@ static int lsm303agr_acc_i2c_read(struct device *dev, u8 reg_addr, int len,
 static int lsm303agr_acc_i2c_write(struct device *dev, u8 reg_addr, int len,
 				   u8 *data)
 {
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(dev);
 
-	if (len > 1)
-		reg_addr |= I2C_AUTO_INCREMENT;
+	if (!data) {
+		dev_err(dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (len <= 0 || len >= LSM303AGR_TX_MAX_LENGTH) {
+		dev_err(dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	{
+		u8 send[len + 1];
 
-	return i2c_transfer(client->adapter, &msg, 1);
+		if (len > 1)
+			reg_addr |= I2C_AUTO_INCREMENT;
+
+		send[0] = reg_addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len;
+		msg.buf = send;
+
+		return i2c_transfer(client->adapter, &msg, 1);
+	}
 }
 
 /* I2C IO routines */

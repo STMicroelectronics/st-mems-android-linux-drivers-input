@@ -59,20 +59,33 @@ static int ism303dac_mag_i2c_read(struct st_common_data *cdata,
 static int ism303dac_mag_i2c_write(struct st_common_data *cdata,
 				  u8 addr, int len, u8 *data)
 {
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	struct i2c_client *client = to_i2c_client(cdata->dev);
 
-	send[0] = addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (!data) {
+		dev_err(cdata->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	if (len <= 0 || len >= ISM303DAC_TX_MAX_LENGTH) {
+		dev_err(cdata->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	return i2c_transfer(client->adapter, &msg, 1);
+	{
+		u8 send[len + 1];
+
+		send[0] = addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len;
+		msg.buf = send;
+
+		return i2c_transfer(client->adapter, &msg, 1);
+	}
 }
 
 static struct st_sensor_transfer_function ism303dac_mag_i2c_tf = {

@@ -81,31 +81,44 @@ static int lis2hh12_i2c_write(struct lis2hh12_status *stat, u8 reg_addr,
 			      int len, u8 *data)
 {
 	int err = 0;
-	u8 send[len + 1];
 	struct i2c_msg msg;
 	int tries = 0;
 	struct i2c_client *client = to_i2c_client(stat->dev);
 
-	reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
-	send[0] = reg_addr;
-	memcpy(&send[1], data, len * sizeof(u8));
-	len++;
+	if (!data) {
+		dev_err(stat->dev, "Invalid I2C write: NULL data buffer\n");
+		return -EINVAL;
+	}
 
-	msg.addr = client->addr;
-	msg.flags = client->flags;
-	msg.len = len;
-	msg.buf = send;
+	if (len <= 0 || len >= BUFF_TX_MAX_LENGTH) {
+		dev_err(stat->dev, "Invalid I2C write length: %d\n", len);
+		return -EINVAL;
+	}
 
-	do {
-		err = i2c_transfer(client->adapter, &msg, 1);
+	{
+		u8 send[len + 1];
+
+		reg_addr |= ((len > 1) ? I2C_AUTO_INCREMENT : 0);
+		send[0] = reg_addr;
+		memcpy(&send[1], data, len * sizeof(u8));
+		len++;
+
+		msg.addr = client->addr;
+		msg.flags = client->flags;
+		msg.len = len;
+		msg.buf = send;
+
+		do {
+			err = i2c_transfer(client->adapter, &msg, 1);
+			if (err != 1)
+				msleep_interruptible(I2C_RETRY_DELAY);
+		} while ((err != 1) && (++tries < I2C_RETRIES));
+
 		if (err != 1)
-			msleep_interruptible(I2C_RETRY_DELAY);
-	} while ((err != 1) && (++tries < I2C_RETRIES));
+			return -EIO;
 
-	if (err != 1)
-		return -EIO;
-
-	return 0;
+		return 0;
+	}
 }
 
 static struct lis2hh12_transfer_function lis2hh12_tf_i2c = {
